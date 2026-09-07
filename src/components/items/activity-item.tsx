@@ -4,7 +4,7 @@ import type { ComponentStyles } from "@/constants/component-styles";
 import { EditActivityModal } from "@/components/modals/edit-activity-modal";
 import { AddTaskModal } from "@/components/modals/add-task-modal";
 import { TaskItem, type Task } from "@/components/items/task-item";
-import { updateActivity } from "@/services/categories.repository";
+import { updateActivity } from "@/services/activities.repository";
 import { createTask } from "@/services/tasks.repository";
 import { createActivityLog } from "@/services/activity-logs.repository";
 
@@ -57,6 +57,12 @@ export function ActivityItem({
     description: string;
     type: "BOOLEAN" | "PROGRESSIVE" | "FINITE";
     xpReward: number;
+    frequence?: number;
+    targetWeight?: number;
+    targetReps?: number;
+    targetSets?: number;
+    targetDistance?: number;
+    targetDuration?: number;
   }) {
     setLoading(true);
     try {
@@ -66,6 +72,11 @@ export function ActivityItem({
         description: taskData.description,
         type: taskData.type,
         xpReward: taskData.xpReward,
+        frequence: taskData.frequence,
+        targetWeight: taskData.targetWeight,
+        targetRepetitions: taskData.targetReps,
+        targetDistanceKm: taskData.targetDistance,
+        targetDurationMin: taskData.targetDuration,
       });
       setIsAddTaskModalOpen(false);
       if (onRefresh) onRefresh();
@@ -135,12 +146,7 @@ export function ActivityItem({
       {activity.tasks && activity.tasks.length > 0 && (
         <View style={{ paddingLeft: 12, paddingBottom: 8 }}>
           {activity.tasks.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              styles={styles}
-              onCompleteTask={handleCompleteTask}
-            />
+            <TaskItem key={task.id} task={task} styles={styles} />
           ))}
         </View>
       )}

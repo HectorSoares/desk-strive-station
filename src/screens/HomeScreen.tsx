@@ -10,20 +10,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  CategoryCard,
-  type Activity,
-  type Category,
-} from "@/components/cards/category-card";
+import { CategoryCard, type Category } from "@/components/cards/category-card";
 import { AddActivityModal } from "@/components/modals/add-activity-modal";
 import { EditCategoryModal } from "@/components/modals/edit-category-modal";
 import { createComponentStyles } from "@/constants/component-styles";
 import { colors } from "@/constants/theme";
 import {
-  createActivity,
   getCategories,
   updateCategory,
 } from "@/services/categories.repository";
+import { createActivity } from "@/services/activities.repository";
 
 const mockedProfile = { level: 5, xpProgress: 75, streak: 12 };
 

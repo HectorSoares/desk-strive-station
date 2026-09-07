@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -21,6 +22,11 @@ type AddTaskModalProps = {
     description: string;
     type: "BOOLEAN" | "PROGRESSIVE" | "FINITE";
     xpReward: number;
+    frequence?: number;
+    targetWeight?: number;
+    targetRepetitions?: number;
+    targetDistanceKm?: number;
+    targetDurationMin?: number;
   }) => void;
 };
 
@@ -37,6 +43,13 @@ export function AddTaskModal({
     "PROGRESSIVE",
   );
   const [xpReward, setXpReward] = useState("50");
+
+  // Novos campos de métricas opcionais
+  const [targetWeight, setTargetWeight] = useState("");
+  const [targetRepetitions, setTargetRepetitions] = useState("");
+  const [targetDistanceKm, setTargetDistanceKm] = useState("");
+  const [targetDurationMin, setTargetDurationMin] = useState("");
+  const [frequence, setFrequence] = useState("1");
 
   if (!visible) return null;
 
@@ -58,88 +71,204 @@ export function AddTaskModal({
             Nova Tarefa / Meta
           </Text>
 
-          <Text style={[localStyles.label, { color: theme.midGray }]}>
-            Título
-          </Text>
-          <TextInput
-            style={[
-              localStyles.input,
-              {
-                backgroundColor: theme.canvas,
-                color: theme.ink,
-                borderColor: theme.hairline,
-              },
-            ]}
-            placeholder="Ex: Ler 10 páginas"
-            placeholderTextColor={theme.midGray}
-            value={title}
-            onChangeText={setTitle}
-          />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ maxHeight: 400 }}
+          >
+            <Text style={[localStyles.label, { color: theme.midGray }]}>
+              Título
+            </Text>
+            <TextInput
+              style={[
+                localStyles.input,
+                {
+                  backgroundColor: theme.canvas,
+                  color: theme.ink,
+                  borderColor: theme.hairline,
+                },
+              ]}
+              placeholder="Ex: Supino Reto / Corrida leve"
+              placeholderTextColor={theme.midGray}
+              value={title}
+              onChangeText={setTitle}
+            />
 
-          <Text style={[localStyles.label, { color: theme.midGray }]}>
-            Descrição (Opcional)
-          </Text>
-          <TextInput
-            style={[
-              localStyles.input,
-              {
-                backgroundColor: theme.canvas,
-                color: theme.ink,
-                borderColor: theme.hairline,
-              },
-            ]}
-            placeholder="Detalhes da meta..."
-            placeholderTextColor={theme.midGray}
-            value={description}
-            onChangeText={setDescription}
-          />
-
-          <Text style={[localStyles.label, { color: theme.midGray }]}>
-            Tipo de Hábito
-          </Text>
-          <View style={localStyles.optionsRow}>
-            {[
-              { label: "Progressiva", value: "PROGRESSIVE" },
-              { label: "Hábito", value: "BOOLEAN" },
-              { label: "Finita", value: "FINITE" },
-            ].map((t) => (
-              <TouchableOpacity
-                key={t.value}
-                style={[
-                  localStyles.optionButton,
-                  { borderColor: theme.hairline },
-                  type === t.value && { backgroundColor: theme.ink },
-                ]}
-                onPress={() => setType(t.value as any)}
-              >
-                <Text
-                  style={[
-                    localStyles.optionText,
-                    { color: type === t.value ? theme.paper : theme.ink },
-                  ]}
-                >
-                  {t.label}
+            <Text style={[localStyles.label, { color: theme.midGray }]}>
+              Descrição (Opcional)
+            </Text>
+            <TextInput
+              style={[
+                localStyles.input,
+                {
+                  backgroundColor: theme.canvas,
+                  color: theme.ink,
+                  borderColor: theme.hairline,
+                },
+              ]}
+              placeholder="Detalhes da meta..."
+              placeholderTextColor={theme.midGray}
+              value={description}
+              onChangeText={setDescription}
+            />
+            <View style={localStyles.rowInputs}>
+              <View style={{ flex: 1 }}>
+                <Text style={[localStyles.label, { color: theme.midGray }]}>
+                  Frequencia (vezes/mês)
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                <TextInput
+                  style={[
+                    localStyles.input,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="Ex: 12"
+                  placeholderTextColor={theme.midGray}
+                  value={frequence}
+                  onChangeText={setFrequence}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[localStyles.label, { color: theme.midGray }]}>
+                  Tipo de Hábito
+                </Text>
+                <View style={localStyles.optionsRow}>
+                  {[
+                    { label: "Progressiva", value: "PROGRESSIVE" },
+                    { label: "Hábito", value: "BOOLEAN" },
+                    { label: "Finita", value: "FINITE" },
+                  ].map((t) => (
+                    <TouchableOpacity
+                      key={t.value}
+                      style={[
+                        localStyles.optionButton,
+                        { borderColor: theme.hairline },
+                        type === t.value && { backgroundColor: theme.ink },
+                      ]}
+                      onPress={() => setType(t.value as any)}
+                    >
+                      <Text
+                        style={[
+                          localStyles.optionText,
+                          { color: type === t.value ? theme.paper : theme.ink },
+                        ]}
+                      >
+                        {t.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </View>
 
-          <Text style={[localStyles.label, { color: theme.midGray }]}>
-            Recompensa XP
-          </Text>
-          <TextInput
-            style={[
-              localStyles.input,
-              {
-                backgroundColor: theme.canvas,
-                color: theme.ink,
-                borderColor: theme.hairline,
-              },
-            ]}
-            keyboardType="numeric"
-            value={xpReward}
-            onChangeText={setXpReward}
-          />
+            {/* Linha Dupla: Peso (kg) e Repetições (Sempre juntos para musculação) */}
+            <View style={localStyles.rowInputs}>
+              <View style={{ flex: 1 }}>
+                <Text style={[localStyles.label, { color: theme.midGray }]}>
+                  Meta Peso (kg)
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.input,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="Ex: 40"
+                  placeholderTextColor={theme.midGray}
+                  value={targetWeight}
+                  onChangeText={setTargetWeight}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[localStyles.label, { color: theme.midGray }]}>
+                  Meta Repetições
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.input,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="Ex: 12"
+                  placeholderTextColor={theme.midGray}
+                  value={targetRepetitions}
+                  onChangeText={setTargetRepetitions}
+                />
+              </View>
+            </View>
+
+            {/* Linha Dupla: Distância (km) e Duração (min) */}
+            <View style={localStyles.rowInputs}>
+              <View style={{ flex: 1 }}>
+                <Text style={[localStyles.label, { color: theme.midGray }]}>
+                  Distância (km)
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.input,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="Ex: 5"
+                  placeholderTextColor={theme.midGray}
+                  value={targetDistanceKm}
+                  onChangeText={setTargetDistanceKm}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[localStyles.label, { color: theme.midGray }]}>
+                  Duração (min)
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.input,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="Ex: 30"
+                  placeholderTextColor={theme.midGray}
+                  value={targetDurationMin}
+                  onChangeText={setTargetDurationMin}
+                />
+              </View>
+            </View>
+
+            <Text style={[localStyles.label, { color: theme.midGray }]}>
+              Recompensa XP Base
+            </Text>
+            <TextInput
+              style={[
+                localStyles.input,
+                {
+                  backgroundColor: theme.canvas,
+                  color: theme.ink,
+                  borderColor: theme.hairline,
+                },
+              ]}
+              keyboardType="numeric"
+              value={xpReward}
+              onChangeText={setXpReward}
+            />
+          </ScrollView>
 
           <View style={localStyles.modalActions}>
             <TouchableOpacity
@@ -164,9 +293,23 @@ export function AddTaskModal({
                   description,
                   type,
                   xpReward: Number(xpReward) || 50,
+                  targetWeight: targetWeight ? Number(targetWeight) : undefined,
+                  targetRepetitions: targetRepetitions
+                    ? Number(targetRepetitions)
+                    : undefined,
+                  targetDistanceKm: targetDistanceKm
+                    ? Number(targetDistanceKm)
+                    : undefined,
+                  targetDurationMin: targetDurationMin
+                    ? Number(targetDurationMin)
+                    : undefined,
                 });
                 setTitle("");
                 setDescription("");
+                setTargetWeight("");
+                setTargetRepetitions("");
+                setTargetDistanceKm("");
+                setTargetDurationMin("");
               }}
               disabled={loading}
             >
@@ -208,6 +351,10 @@ const localStyles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 16,
     fontSize: 14,
+  },
+  rowInputs: {
+    flexDirection: "row",
+    gap: 12,
   },
   optionsRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   optionButton: {

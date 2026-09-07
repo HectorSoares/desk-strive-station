@@ -1,5 +1,5 @@
 import type { Activity, Category } from '@/components/cards/category-card';
-import type { Task } from '@/components/task-item';
+import type { Task } from '@/components/items/task-item';
 import { supabase } from '@/services/supabase';
 
 type TaskRow = {
@@ -109,22 +109,6 @@ export async function getCategories(): Promise<Category[]> {
     activities: (category.subcategories ?? []).map(toActivity),
   }));
 }
-
-export async function createActivity({ categoryId, name }: NewActivity) {
-  const { error } = await supabase.from('subcategories').insert({
-    category_id: categoryId,
-    name,
-  });
-
-  if (error) throw error;
-}
-
-export async function updateActivity({ id, name }: { id: string; name: string; type?: string }) {
-  const { error } = await supabase.from('subcategories').update({ name }).eq('id', id);
-
-  if (error) throw error;
-}
-
 export async function updateCategory({ id, name, icon }: CategoryUpdate) {
   const { error } = await supabase.from('categories').update({ name, icon }).eq('id', id);
 
