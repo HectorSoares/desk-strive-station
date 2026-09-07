@@ -20,12 +20,15 @@ import {
   updateCategory,
 } from "@/services/categories.repository";
 import { createActivity } from "@/services/activities.repository";
-
-const mockedProfile = { level: 5, xpProgress: 75, streak: 12 };
+import {
+  getUserProfile,
+  type UserProfile,
+} from "@/services/user_profile.repository";
 
 export default function HomeScreen() {
   const [themeName, setThemeName] = useState<"light" | "dark">("light");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [activityName, setActivityName] = useState("");
@@ -38,21 +41,36 @@ export default function HomeScreen() {
   const theme = colors[themeName];
   const styles = createComponentStyles(theme);
 
-  async function loadCategories() {
+  async function loadData() {
     try {
-      const nextCategories = await getCategories();
+      const [nextCategories, nextProfile] = await Promise.all([
+        getCategories(),
+        getUserProfile(),
+      ]);
+
       setCategories(nextCategories);
+      if (nextProfile) {
+        setProfile(nextProfile);
+      }
+
       setSelectedCategoryId(
         (currentId) => currentId || nextCategories[0]?.id || "",
       );
     } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
+      console.error("Erro ao carregar dados da Home:", error);
     }
   }
 
   useEffect(() => {
-    void loadCategories();
+    void loadData();
   }, []);
+
+  // Calcula a porcentagem de progresso de XP para o nível atual (a cada 500 XP)
+  const currentTotalXp = profile?.total_xp ?? 0;
+  const currentLevel = profile?.level ?? 1;
+  const xpIntoCurrentLevel = currentTotalXp % 500;
+  const xpProgress = Math.round((xpIntoCurrentLevel / 500) * 100);
+  const streakDays = profile?.streak_days ?? 0;
 
   function closeAddModal() {
     setIsAddModalVisible(false);
@@ -80,7 +98,7 @@ export default function HomeScreen() {
         categoryId: selectedCategoryId,
         name: activityName.trim(),
       });
-      await loadCategories();
+      await loadData();
       closeAddModal();
     } catch (error) {
       console.error("Erro ao salvar atividade:", error);
@@ -99,7 +117,7 @@ export default function HomeScreen() {
         name: editCategoryName.trim(),
         icon: editCategoryIcon.trim() || "📁",
       });
-      await loadCategories();
+      await loadData();
       closeEditModal();
     } catch (error) {
       console.error("Erro ao atualizar categoria:", error);
@@ -139,18 +157,15 @@ export default function HomeScreen() {
           </View>
           <View style={styles.profileInfo}>
             <View style={styles.levelRow}>
-              <Text style={styles.headingSm}>Nível {mockedProfile.level}</Text>
-              <Text style={styles.textBodyLg}>{mockedProfile.xpProgress}%</Text>
+              <Text style={styles.headingSm}>Nível {currentLevel}</Text>
+              <Text style={styles.textBodyLg}>{xpProgress}%</Text>
             </View>
             <Text style={styles.textMuted}>
-              🔥 {mockedProfile.streak} dias seguidos ativos
+              🔥 {streakDays} dias seguidos ativos
             </Text>
             <View style={styles.progressBarBg}>
               <View
-                style={[
-                  styles.progressBarFill,
-                  { width: `${mockedProfile.xpProgress}%` },
-                ]}
+                style={[styles.progressBarFill, { width: `${xpProgress}%` }]}
               />
             </View>
           </View>
@@ -158,11 +173,7 @@ export default function HomeScreen() {
 
         {categories.map((category) => (
           <View key={category.id} style={localStyles.categoryWrapper}>
-            <CategoryCard
-              category={category}
-              styles={styles}
-              theme={theme} // 👈 Adicione esta linha
-            />
+            <CategoryCard category={category} styles={styles} theme={theme} />
             <TouchableOpacity
               style={[
                 localStyles.editCategoryButton,

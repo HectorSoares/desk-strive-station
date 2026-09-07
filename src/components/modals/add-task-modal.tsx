@@ -27,6 +27,9 @@ type AddTaskModalProps = {
     targetRepetitions?: number;
     targetDistanceKm?: number;
     targetDurationMin?: number;
+    targetValue?: number;
+    unitOfMeasurement?: string;
+    currentProgress?: number;
   }) => void;
 };
 
@@ -44,12 +47,15 @@ export function AddTaskModal({
   );
   const [xpReward, setXpReward] = useState("50");
 
-  // Novos campos de métricas opcionais
+  // Métricas específicas e genéricas
   const [targetWeight, setTargetWeight] = useState("");
   const [targetRepetitions, setTargetRepetitions] = useState("");
   const [targetDistanceKm, setTargetDistanceKm] = useState("");
   const [targetDurationMin, setTargetDurationMin] = useState("");
   const [frequence, setFrequence] = useState("1");
+  const [targetValue, setTargetValue] = useState("");
+  const [unitOfMeasurement, setUnitOfMeasurement] = useState("");
+  const [currentProgress, setCurrentProgress] = useState("");
 
   if (!visible) return null;
 
@@ -73,47 +79,13 @@ export function AddTaskModal({
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            style={{ maxHeight: 400 }}
+            style={{ maxHeight: 450 }}
           >
-            <Text style={[localStyles.label, { color: theme.midGray }]}>
-              Título
-            </Text>
-            <TextInput
-              style={[
-                localStyles.input,
-                {
-                  backgroundColor: theme.canvas,
-                  color: theme.ink,
-                  borderColor: theme.hairline,
-                },
-              ]}
-              placeholder="Ex: Supino Reto / Corrida leve"
-              placeholderTextColor={theme.midGray}
-              value={title}
-              onChangeText={setTitle}
-            />
-
-            <Text style={[localStyles.label, { color: theme.midGray }]}>
-              Descrição (Opcional)
-            </Text>
-            <TextInput
-              style={[
-                localStyles.input,
-                {
-                  backgroundColor: theme.canvas,
-                  color: theme.ink,
-                  borderColor: theme.hairline,
-                },
-              ]}
-              placeholder="Detalhes da meta..."
-              placeholderTextColor={theme.midGray}
-              value={description}
-              onChangeText={setDescription}
-            />
-            <View style={localStyles.rowInputs}>
-              <View style={{ flex: 1 }}>
+            {/* Linha 1: Título (maior) e Tipo */}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flex: 2 }}>
                 <Text style={[localStyles.label, { color: theme.midGray }]}>
-                  Frequencia (vezes/mês)
+                  Título
                 </Text>
                 <TextInput
                   style={[
@@ -124,21 +96,21 @@ export function AddTaskModal({
                       borderColor: theme.hairline,
                     },
                   ]}
-                  keyboardType="numeric"
-                  placeholder="Ex: 12"
+                  placeholder="Ex: Supino Reto"
                   placeholderTextColor={theme.midGray}
-                  value={frequence}
-                  onChangeText={setFrequence}
+                  value={title}
+                  onChangeText={setTitle}
                 />
               </View>
-              <View style={{ flex: 1 }}>
+
+              <View style={{ flex: 1.2 }}>
                 <Text style={[localStyles.label, { color: theme.midGray }]}>
-                  Tipo de Hábito
+                  Tipo
                 </Text>
                 <View style={localStyles.optionsRow}>
                   {[
-                    { label: "Progressiva", value: "PROGRESSIVE" },
-                    { label: "Hábito", value: "BOOLEAN" },
+                    { label: "Prog", value: "PROGRESSIVE" },
+                    { label: "Rotina", value: "BOOLEAN" },
                     { label: "Finita", value: "FINITE" },
                   ].map((t) => (
                     <TouchableOpacity
@@ -164,11 +136,29 @@ export function AddTaskModal({
               </View>
             </View>
 
-            {/* Linha Dupla: Peso (kg) e Repetições (Sempre juntos para musculação) */}
-            <View style={localStyles.rowInputs}>
-              <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flex: 2 }}>
                 <Text style={[localStyles.label, { color: theme.midGray }]}>
-                  Meta Peso (kg)
+                  Descrição (Opcional)
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.input,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  placeholder="Detalhes da meta..."
+                  placeholderTextColor={theme.midGray}
+                  value={description}
+                  onChangeText={setDescription}
+                />
+              </View>
+              <View style={{ flex: 1.2 }}>
+                <Text style={[localStyles.label, { color: theme.midGray }]}>
+                  Recompensa XP Base
                 </Text>
                 <TextInput
                   style={[
@@ -180,19 +170,140 @@ export function AddTaskModal({
                     },
                   ]}
                   keyboardType="numeric"
-                  placeholder="Ex: 40"
+                  value={xpReward}
+                  onChangeText={setXpReward}
+                />
+              </View>
+            </View>
+
+            {/* Bloco de 4 campos compactos por linha (Métricas) */}
+            <View style={localStyles.rowInputs4}>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[localStyles.labelCompact, { color: theme.midGray }]}
+                >
+                  Meta
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.inputCompact,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="Meta"
+                  placeholderTextColor={theme.midGray}
+                  value={targetValue}
+                  onChangeText={setTargetValue}
+                />
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[localStyles.labelCompact, { color: theme.midGray }]}
+                >
+                  Unidade
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.inputCompact,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  placeholder="ex: páginas"
+                  placeholderTextColor={theme.midGray}
+                  value={unitOfMeasurement}
+                  onChangeText={setUnitOfMeasurement}
+                />
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[localStyles.labelCompact, { color: theme.midGray }]}
+                >
+                  Progresso
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.inputCompact,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="Atual"
+                  placeholderTextColor={theme.midGray}
+                  value={currentProgress}
+                  onChangeText={setCurrentProgress}
+                />
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[localStyles.labelCompact, { color: theme.midGray }]}
+                >
+                  Freq/Mês
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.inputCompact,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="Freq"
+                  placeholderTextColor={theme.midGray}
+                  value={frequence}
+                  onChangeText={setFrequence}
+                />
+              </View>
+            </View>
+
+            {/* Linha de métricas específicas opcionais (Peso, Reps, Distância, Duração) */}
+            <View style={localStyles.rowInputs4}>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[localStyles.labelCompact, { color: theme.midGray }]}
+                >
+                  Peso (kg)
+                </Text>
+                <TextInput
+                  style={[
+                    localStyles.inputCompact,
+                    {
+                      backgroundColor: theme.canvas,
+                      color: theme.ink,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  keyboardType="numeric"
+                  placeholder="kg"
                   placeholderTextColor={theme.midGray}
                   value={targetWeight}
                   onChangeText={setTargetWeight}
                 />
               </View>
+
               <View style={{ flex: 1 }}>
-                <Text style={[localStyles.label, { color: theme.midGray }]}>
-                  Meta Repetições
+                <Text
+                  style={[localStyles.labelCompact, { color: theme.midGray }]}
+                >
+                  Reps
                 </Text>
                 <TextInput
                   style={[
-                    localStyles.input,
+                    localStyles.inputCompact,
                     {
                       backgroundColor: theme.canvas,
                       color: theme.ink,
@@ -200,23 +311,22 @@ export function AddTaskModal({
                     },
                   ]}
                   keyboardType="numeric"
-                  placeholder="Ex: 12"
+                  placeholder="reps"
                   placeholderTextColor={theme.midGray}
                   value={targetRepetitions}
                   onChangeText={setTargetRepetitions}
                 />
               </View>
-            </View>
 
-            {/* Linha Dupla: Distância (km) e Duração (min) */}
-            <View style={localStyles.rowInputs}>
               <View style={{ flex: 1 }}>
-                <Text style={[localStyles.label, { color: theme.midGray }]}>
-                  Distância (km)
+                <Text
+                  style={[localStyles.labelCompact, { color: theme.midGray }]}
+                >
+                  Km
                 </Text>
                 <TextInput
                   style={[
-                    localStyles.input,
+                    localStyles.inputCompact,
                     {
                       backgroundColor: theme.canvas,
                       color: theme.ink,
@@ -224,19 +334,22 @@ export function AddTaskModal({
                     },
                   ]}
                   keyboardType="numeric"
-                  placeholder="Ex: 5"
+                  placeholder="km"
                   placeholderTextColor={theme.midGray}
                   value={targetDistanceKm}
                   onChangeText={setTargetDistanceKm}
                 />
               </View>
+
               <View style={{ flex: 1 }}>
-                <Text style={[localStyles.label, { color: theme.midGray }]}>
-                  Duração (min)
+                <Text
+                  style={[localStyles.labelCompact, { color: theme.midGray }]}
+                >
+                  Min
                 </Text>
                 <TextInput
                   style={[
-                    localStyles.input,
+                    localStyles.inputCompact,
                     {
                       backgroundColor: theme.canvas,
                       color: theme.ink,
@@ -244,30 +357,13 @@ export function AddTaskModal({
                     },
                   ]}
                   keyboardType="numeric"
-                  placeholder="Ex: 30"
+                  placeholder="min"
                   placeholderTextColor={theme.midGray}
                   value={targetDurationMin}
                   onChangeText={setTargetDurationMin}
                 />
               </View>
             </View>
-
-            <Text style={[localStyles.label, { color: theme.midGray }]}>
-              Recompensa XP Base
-            </Text>
-            <TextInput
-              style={[
-                localStyles.input,
-                {
-                  backgroundColor: theme.canvas,
-                  color: theme.ink,
-                  borderColor: theme.hairline,
-                },
-              ]}
-              keyboardType="numeric"
-              value={xpReward}
-              onChangeText={setXpReward}
-            />
           </ScrollView>
 
           <View style={localStyles.modalActions}>
@@ -293,6 +389,7 @@ export function AddTaskModal({
                   description,
                   type,
                   xpReward: Number(xpReward) || 50,
+                  frequence: frequence ? Number(frequence) : undefined,
                   targetWeight: targetWeight ? Number(targetWeight) : undefined,
                   targetRepetitions: targetRepetitions
                     ? Number(targetRepetitions)
@@ -303,6 +400,13 @@ export function AddTaskModal({
                   targetDurationMin: targetDurationMin
                     ? Number(targetDurationMin)
                     : undefined,
+                  targetValue: targetValue ? Number(targetValue) : undefined,
+                  unitOfMeasurement: unitOfMeasurement
+                    ? unitOfMeasurement.trim()
+                    : undefined,
+                  currentProgress: currentProgress
+                    ? Number(currentProgress)
+                    : undefined,
                 });
                 setTitle("");
                 setDescription("");
@@ -310,6 +414,9 @@ export function AddTaskModal({
                 setTargetRepetitions("");
                 setTargetDistanceKm("");
                 setTargetDurationMin("");
+                setTargetValue("");
+                setUnitOfMeasurement("");
+                setCurrentProgress("");
               }}
               disabled={loading}
             >
@@ -339,36 +446,59 @@ const localStyles = StyleSheet.create({
   },
   modalTitle: { fontSize: 20, fontWeight: "600", marginBottom: 16 },
   label: {
-    fontSize: 12,
+    fontSize: 11,
     textTransform: "uppercase",
-    marginBottom: 8,
-    marginTop: 12,
+    marginBottom: 6,
+    marginTop: 10,
     fontWeight: "600",
   },
+  labelCompact: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    marginBottom: 4,
+    marginTop: 8,
+    fontWeight: "600",
+    textAlign: "center",
+  },
   input: {
-    height: 48,
-    borderRadius: 18,
+    height: 44,
+    borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 16,
-    fontSize: 14,
-  },
-  rowInputs: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  optionsRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  optionButton: {
-    paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 18,
-    borderWidth: 1,
+    fontSize: 13,
   },
-  optionText: { fontSize: 13, fontWeight: "500" },
-  modalActions: { flexDirection: "row", gap: 12, marginTop: 24 },
+  inputCompact: {
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    fontSize: 11,
+    textAlign: "center",
+  },
+  rowInputs4: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  optionsRow: {
+    flexDirection: "row",
+    gap: 4,
+    justifyContent: "space-between",
+    marginTop: 2,
+  },
+  optionButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    flex: 1,
+    alignItems: "center",
+  },
+  optionText: { fontSize: 10, fontWeight: "600" },
+  modalActions: { flexDirection: "row", gap: 12, marginTop: 20 },
   actionBtn: {
     flex: 1,
     height: 44,
-    borderRadius: 18,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
   },

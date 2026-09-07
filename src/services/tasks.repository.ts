@@ -1,6 +1,6 @@
 import { supabase } from "@/services/supabase";
 
-type CreateTaskDTO = {
+export type CreateTaskDTO = {
   subcategoryId: string;
   title: string;
   description?: string;
@@ -11,6 +11,10 @@ type CreateTaskDTO = {
   targetRepetitions?: number;
   targetDistanceKm?: number;
   targetDurationMin?: number;
+  targetValue?: number;
+  unitOfMeasurement?: string;
+  currentProgress?: number;
+  metadata?: Record<string, any>;
 };
 
 export async function createTask({
@@ -24,6 +28,10 @@ export async function createTask({
   targetRepetitions,
   targetDistanceKm,
   targetDurationMin,
+  targetValue,
+  unitOfMeasurement,
+  currentProgress,
+  metadata
 }: CreateTaskDTO) {
   const { data, error } = await supabase.from("tasks_or_goals").insert([
     {
@@ -37,6 +45,10 @@ export async function createTask({
       target_repetitions: targetRepetitions ?? null,
       target_distance_km: targetDistanceKm ?? null,
       target_duration_min: targetDurationMin ?? null,
+      target_value: targetValue ?? null,
+      unit_of_measurement: unitOfMeasurement ?? null,
+      current_progress: currentProgress ?? null,
+      metadata: metadata ?? null,
     },
   ]);
 

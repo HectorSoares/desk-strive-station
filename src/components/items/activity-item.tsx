@@ -59,10 +59,13 @@ export function ActivityItem({
     xpReward: number;
     frequence?: number;
     targetWeight?: number;
-    targetReps?: number;
+    targetRepetitions?: number;
     targetSets?: number;
-    targetDistance?: number;
-    targetDuration?: number;
+    targetDistanceKm?: number;
+    targetDurationMin?: number;
+    targetValue?: number;
+    unitOfMeasurement?: string;
+    currentProgress?: number;
   }) {
     setLoading(true);
     try {
@@ -74,9 +77,13 @@ export function ActivityItem({
         xpReward: taskData.xpReward,
         frequence: taskData.frequence,
         targetWeight: taskData.targetWeight,
-        targetRepetitions: taskData.targetReps,
-        targetDistanceKm: taskData.targetDistance,
-        targetDurationMin: taskData.targetDuration,
+        targetRepetitions: taskData.targetRepetitions,
+        targetDistanceKm: taskData.targetDistanceKm,
+        targetDurationMin: taskData.targetDurationMin,
+        targetValue: taskData.targetValue,
+        unitOfMeasurement: taskData.unitOfMeasurement,
+        currentProgress: taskData.currentProgress,
+        metadata: {},
       });
       setIsAddTaskModalOpen(false);
       if (onRefresh) onRefresh();
@@ -146,7 +153,7 @@ export function ActivityItem({
       {activity.tasks && activity.tasks.length > 0 && (
         <View style={{ paddingLeft: 12, paddingBottom: 8 }}>
           {activity.tasks.map((task) => (
-            <TaskItem key={task.id} task={task} styles={styles} />
+            <TaskItem theme={theme} key={task.id} task={task} styles={styles} />
           ))}
         </View>
       )}

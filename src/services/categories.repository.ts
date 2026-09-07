@@ -10,6 +10,15 @@ type TaskRow = {
   type: 'BOOLEAN' | 'PROGRESSIVE' | 'FINITE';
   status: 'PENDING' | 'COMPLETED';
   xp_reward: number;
+  frequence: number | null;
+  target_weight: number | null;
+  target_repetitions: number | null;
+  target_distance_km: number | null;
+  target_duration_min: number | null;
+  target_value: number | null;
+  unit_of_measurement: string | null;
+  current_progress: number | null;
+  metadata: Record<string, any> | null;
 };
 
 type SubcategoryRow = {
@@ -94,7 +103,16 @@ export async function getCategories(): Promise<Category[]> {
         description,
         type,
         status,
-        xp_reward
+        xp_reward,
+        frequence,
+        target_weight,
+        target_repetitions,
+        target_distance_km,
+        target_duration_min,
+        target_value,
+        unit_of_measurement,
+        current_progress,
+        metadata
       )
     )
   `);

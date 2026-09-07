@@ -17,12 +17,28 @@ export type Task = {
 type TaskItemProps = {
   task: Task;
   styles: ComponentStyles;
+  theme: any;
   onRefresh?: () => void;
 };
 
-export function TaskItem({ task, styles, onRefresh }: TaskItemProps) {
+// Helper para definir o ícone e o texto da tag baseado no tipo da task
+function getTaskTypeDetails(type: Task["type"]) {
+  switch (type) {
+    case "PROGRESSIVE":
+      return { icon: "📈", label: "Progressivo", badgeColor: "#3b82f6" }; // Azul
+    case "FINITE":
+      return { icon: "⏱️", label: "Tempo", badgeColor: "#10b981" }; // Verde
+    case "BOOLEAN":
+    default:
+      return { icon: "🔄", label: "Check", badgeColor: "#8b5cf6" }; // Roxo
+  }
+}
+
+export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const taskDetails = getTaskTypeDetails(task.type);
 
   async function handleRegisterLog(metrics: {
     executedWeight?: number;
@@ -32,7 +48,6 @@ export function TaskItem({ task, styles, onRefresh }: TaskItemProps) {
   }) {
     setLoading(true);
     try {
-      // Chama a função RPC do Supabase que criamos na migration
       await registerActivityLog({
         taskId: task.id,
         executedWeight: metrics.executedWeight,
@@ -57,46 +72,59 @@ export function TaskItem({ task, styles, onRefresh }: TaskItemProps) {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingVertical: 8,
+          paddingVertical: 10,
           paddingLeft: 16,
           paddingRight: 8,
           borderTopWidth: 1,
-          borderTopColor: "rgba(0,0,0,0.05)",
+          borderTopColor: theme.hairline,
         }}
       >
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 13, fontWeight: "500" }}>
-            📌 {task.title} (+{task.xp_reward} XP)
-          </Text>
-          {task.description ? (
-            <Text style={{ fontSize: 11, opacity: 0.6 }}>
-              {task.description}
+        <View style={{ flex: 1, paddingRight: 8 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 2,
+            }}
+          >
+            <Text style={styles.taskName}>
+              {taskDetails.icon} {task.title}
             </Text>
-          ) : null}
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {task.description ? (
+              <Text style={styles.taskDesc}>{task.description}</Text>
+            ) : null}
+            <Text style={styles.taskTag}>+{task.xp_reward} XP</Text>
+          </View>
         </View>
 
-        {/* Botão que abre o modal para registrar o log com as métricas reais */}
+        {/* Botão para registrar métricas reais via RPC */}
         <TouchableOpacity
           style={[
             styles.buttonOutline,
-            { paddingVertical: 4, paddingHorizontal: 10 },
+            {
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              borderColor: theme.hairline,
+            },
           ]}
           onPress={() => setIsLogModalOpen(true)}
         >
-          <Text style={{ fontSize: 11, fontWeight: "600" }}>⚡ Registrar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.buttonOutline,
-            { paddingVertical: 4, paddingHorizontal: 10 },
-          ]}
-          onPress={() => setIsLogModalOpen(true)}
-        >
-          <Text style={{ fontSize: 11, fontWeight: "600" }}> Executar</Text>
+          <Text style={{ fontSize: 11, fontWeight: "600", color: theme.ink }}>
+            ⚡ Registrar
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Modal para preencher peso, reps, km ou tempo antes de salvar o log */}
       <RegisterLogModal
         visible={isLogModalOpen}
         task={task}
