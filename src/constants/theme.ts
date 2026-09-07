@@ -26,6 +26,8 @@ export const colors = {
   },
 } as const;
 
+export type AppColorPalette = (typeof colors)[keyof typeof colors];
+
 /** API compatível com os componentes do template Expo. */
 export const Colors = {
   light: {

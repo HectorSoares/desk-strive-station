@@ -1,14 +1,12 @@
 import { StyleSheet } from 'react-native';
 
-import { colors, radius, spacing } from '@/constants/theme';
-
-type ColorPalette = (typeof colors)[keyof typeof colors];
+import { colors, radius, spacing, type AppColorPalette } from '@/constants/theme';
 
 /**
  * Estilos padrão reutilizáveis para componentes da interface.
  * Centralize aqui ajustes visuais de cards, botões, badges e tipografia.
  */
-export function createComponentStyles(theme: ColorPalette) {
+export function createComponentStyles(theme: AppColorPalette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: theme.canvas },
     scrollContent: { padding: spacing[20], paddingBottom: 100 },
@@ -44,6 +42,8 @@ export function createComponentStyles(theme: ColorPalette) {
     fabText: { color: theme.paper, fontSize: 28, fontWeight: '400', marginTop: -2 },
   });
 }
+
+export type ComponentStyles = ReturnType<typeof createComponentStyles>;
 
 /** Estilos claros padrão para telas que ainda não oferecem troca de tema. */
 export const componentStyles = createComponentStyles(colors.light);
