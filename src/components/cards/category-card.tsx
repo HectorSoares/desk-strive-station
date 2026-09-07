@@ -1,16 +1,7 @@
 import { Text, TouchableOpacity, View } from "react-native";
 import type { ComponentStyles } from "@/constants/component-styles";
-import { ActivityItem, type Activity } from "../items/activity-item";
-
-export type { Activity };
-
-export type Category = {
-  id: string;
-  name: string;
-  icon: string;
-  level: number;
-  activities: Activity[];
-};
+import { ActivityItem } from "../items/activity-item";
+import { Category } from "../types/category.type";
 
 type CategoryCardProps = {
   category: Category;

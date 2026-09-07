@@ -3,16 +3,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import type { ComponentStyles } from "@/constants/component-styles";
 import { RegisterLogModal } from "@/components/modals/register-log-modal";
 import { registerActivityLog } from "@/services/activity-logs.repository";
-
-export type Task = {
-  id: string;
-  subcategory_id: string;
-  title: string;
-  description?: string;
-  type: "BOOLEAN" | "PROGRESSIVE" | "FINITE";
-  status: "PENDING" | "COMPLETED";
-  xp_reward: number;
-};
+import { Task } from "../types/task.types";
 
 type TaskItemProps = {
   task: Task;
@@ -39,6 +30,38 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   const [loading, setLoading] = useState(false);
 
   const taskDetails = getTaskTypeDetails(task.type);
+
+  // Validação e cálculo para a barra de progresso de tarefas finitas
+  const isFiniteWithTarget =
+    task.type === "FINITE" &&
+    task.target_value !== undefined &&
+    task.target_value > 0;
+
+  console.log(
+    "TaskItem - isFiniteWithTarget:",
+    isFiniteWithTarget,
+    "task.target_value:",
+    task.target_value,
+  );
+
+  const currentProg = task.current_progress ?? 0;
+  const targetVal = task.target_value ?? 1;
+  const progressPercentage = isFiniteWithTarget
+    ? Math.min(Math.round((currentProg / targetVal) * 100), 100)
+    : 0;
+
+  // Informações extras para tarefas progressivas
+  const progressiveDetails =
+    task.type === "PROGRESSIVE"
+      ? [
+          task.target_weight ? `${task.target_weight}kg` : null,
+          task.target_repetitions ? `${task.target_repetitions} reps` : null,
+          task.target_distance_km ? `${task.target_distance_km} km` : null,
+          task.target_duration_min ? `${task.target_duration_min} min` : null,
+        ]
+          .filter(Boolean)
+          .join(" • ")
+      : null;
 
   async function handleRegisterLog(metrics: {
     executedWeight?: number;
@@ -93,18 +116,72 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
             </Text>
           </View>
 
+          {/* Se for progressiva, exibe os valores das métricas */}
+          {task.type === "PROGRESSIVE" && progressiveDetails ? (
+            <Text
+              style={{
+                fontSize: 11,
+                color: theme.ink,
+                opacity: 0.7,
+                marginBottom: 4,
+              }}
+            >
+              Metas: {progressiveDetails}
+            </Text>
+          ) : null}
+
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
+              marginBottom: isFiniteWithTarget ? 6 : 0,
             }}
           >
             {task.description ? (
               <Text style={styles.taskDesc}>{task.description}</Text>
             ) : null}
+
             <Text style={styles.taskTag}>+{task.xp_reward} XP</Text>
           </View>
+
+          {/* Barra de progresso na mesma linha/bloco de descrição e XP para FINITE com target_value */}
+          {isFiniteWithTarget ? (
+            <View style={{ marginTop: 2 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginBottom: 2,
+                }}
+              >
+                <Text style={{ fontSize: 10, color: theme.muted }}>
+                  Progresso: {currentProg} / {targetVal}
+                </Text>
+                <Text
+                  style={{ fontSize: 10, fontWeight: "700", color: theme.ink }}
+                >
+                  {progressPercentage}%
+                </Text>
+              </View>
+              <View
+                style={{
+                  height: 4,
+                  backgroundColor: theme.hairline,
+                  borderRadius: 2,
+                  overflow: "hidden",
+                }}
+              >
+                <View
+                  style={{
+                    height: "100%",
+                    width: `${progressPercentage}%`,
+                    backgroundColor: theme.ink,
+                  }}
+                />
+              </View>
+            </View>
+          ) : null}
         </View>
 
         {/* Botão para registrar métricas reais via RPC */}

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { CategoryCard, type Category } from "@/components/cards/category-card";
+import { CategoryCard } from "@/components/cards/category-card";
 import { AddActivityModal } from "@/components/modals/add-activity-modal";
 import { EditCategoryModal } from "@/components/modals/edit-category-modal";
 import { createComponentStyles } from "@/constants/component-styles";
@@ -24,6 +24,7 @@ import {
   getUserProfile,
   type UserProfile,
 } from "@/services/user_profile.repository";
+import { Category } from "@/components/types/category.type";
 
 export default function HomeScreen() {
   const [themeName, setThemeName] = useState<"light" | "dark">("light");

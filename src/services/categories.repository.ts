@@ -1,5 +1,7 @@
-import type { Activity, Category } from '@/components/cards/category-card';
-import type { Task } from '@/components/items/task-item';
+
+import { Activity } from '@/components/types/activity.types';
+import { Category } from '@/components/types/category.type';
+import { Task } from '@/components/types/task.types';
 import { supabase } from '@/services/supabase';
 
 type TaskRow = {
@@ -7,7 +9,7 @@ type TaskRow = {
   subcategory_id: string;
   title: string;
   description: string | null;
-  type: 'BOOLEAN' | 'PROGRESSIVE' | 'FINITE';
+  type: Task['type'];
   status: 'PENDING' | 'COMPLETED';
   xp_reward: number;
   frequence: number | null;
@@ -78,12 +80,12 @@ function toActivity(subcategory: SubcategoryRow): Activity {
   };
 
   if (primaryType === 'BOOLEAN') {
-    return { ...baseActivity, type: 'BOOLEAN', done: false };
+    return { ...baseActivity, done: false };
   }
   if (primaryType === 'FINITE') {
-    return { ...baseActivity, type: 'FINITE', progress: 0 };
+    return { ...baseActivity, progress: 0 };
   }
-  return { ...baseActivity, type: 'PROGRESSIVE' };
+  return { ...baseActivity };
 }
 
 /** Operações de categorias e atividades persistidas no Supabase. */

@@ -3,35 +3,11 @@ import { Text, TouchableOpacity, View } from "react-native";
 import type { ComponentStyles } from "@/constants/component-styles";
 import { EditActivityModal } from "@/components/modals/edit-activity-modal";
 import { AddTaskModal } from "@/components/modals/add-task-modal";
-import { TaskItem, type Task } from "@/components/items/task-item";
+import { TaskItem } from "@/components/items/task-item";
 import { updateActivity } from "@/services/activities.repository";
 import { createTask } from "@/services/tasks.repository";
 import { createActivityLog } from "@/services/activity-logs.repository";
-
-export type Activity =
-  | {
-      id: string;
-      name: string;
-      type: "PROGRESSIVE";
-      desc: string;
-      tasks?: Task[];
-    }
-  | {
-      id: string;
-      name: string;
-      type: "BOOLEAN";
-      desc: string;
-      done: boolean;
-      tasks?: Task[];
-    }
-  | {
-      id: string;
-      name: string;
-      type: "FINITE";
-      desc: string;
-      progress: number;
-      tasks?: Task[];
-    };
+import { Activity } from "../types/activity.types";
 
 type ActivityItemProps = {
   activity: Activity;
@@ -106,16 +82,12 @@ export function ActivityItem({
     }
   }
 
-  async function handleSaveActivity(
-    id: string,
-    name: string,
-    type: Activity["type"],
-  ) {
+  async function handleSaveActivity(id: string, name: string) {
     if (!name.trim()) return;
 
     setLoading(true);
     try {
-      await updateActivity({ id, name: name.trim(), type });
+      await updateActivity({ id, name: name.trim() });
       setIsEditModalOpen(false);
       if (onRefresh) onRefresh();
     } catch (error) {

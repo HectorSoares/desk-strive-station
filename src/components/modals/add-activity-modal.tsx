@@ -1,8 +1,7 @@
 import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
-
-import type { Category, Activity } from "@/components/cards/category-card";
 import { modalStyles as styles } from "@/components/modals/modal-styles";
 import type { AppColorPalette } from "@/constants/theme";
+import { Category } from "../types/category.type";
 
 type AddActivityModalProps = {
   visible: boolean;
@@ -16,12 +15,6 @@ type AddActivityModalProps = {
   onCategoryChange: (id: string) => void;
   onSubmit: () => void;
 };
-
-const activityTypes: Array<{ label: string; value: Activity["type"] }> = [
-  { label: "Progressiva", value: "PROGRESSIVE" },
-  { label: "Hábito", value: "BOOLEAN" },
-  { label: "Finita", value: "FINITE" },
-];
 
 export function AddActivityModal({
   visible,
