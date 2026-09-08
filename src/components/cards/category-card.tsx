@@ -16,6 +16,7 @@ export function CategoryCard({
   theme, // 👈 Recebido aqui
   onEditCategory,
 }: CategoryCardProps) {
+  console.log("CategoryCard renderizado com category:", category); // Adicionado para depuração
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>

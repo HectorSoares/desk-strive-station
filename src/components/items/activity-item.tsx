@@ -27,7 +27,7 @@ export function ActivityItem({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  console.log("ActivityItem renderizado com activity:", activity);
   async function handleSaveTask(taskData: {
     title: string;
     description: string;
@@ -46,7 +46,7 @@ export function ActivityItem({
     setLoading(true);
     try {
       await createTask({
-        subcategoryId: activity.id,
+        activityId: activity.id,
         title: taskData.title,
         description: taskData.description,
         type: taskData.type,
@@ -142,7 +142,7 @@ export function ActivityItem({
 
       <AddTaskModal
         visible={isAddTaskModalOpen}
-        subcategoryId={activity.id}
+        activityId={activity.id}
         theme={theme}
         styles={styles}
         loading={loading}

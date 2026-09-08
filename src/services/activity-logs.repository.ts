@@ -11,7 +11,7 @@ export async function createActivityLog({
   xpGained = 50,
   metadata = {},
 }: CreateActivityLogDTO) {
-  const { data, error } = await supabase.from("activity_logs").insert([
+  const { data, error } = await supabase.from("task_logs").insert([
     {
       task_id: taskId,
       xp_gained: xpGained,

@@ -43,6 +43,7 @@ export function createComponentStyles(theme: AppColorPalette) {
     themeButtonText: { color: theme.ink, fontSize: 13, fontWeight: '600' },
     fab: { position: 'absolute', bottom: spacing[24], alignSelf: 'center', width: 56, height: 56, borderRadius: 28, backgroundColor: theme.ink, justifyContent: 'center', alignItems: 'center', boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)' },
     fabText: { color: theme.paper, fontSize: 28, fontWeight: '400', marginTop: -2 },
+    infoDesc: { color: theme.midGray, fontSize: 10 },
   });
 }
 

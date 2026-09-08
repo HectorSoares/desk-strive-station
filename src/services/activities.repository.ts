@@ -1,23 +1,21 @@
-import type { Activity } from '@/components/cards/category-card';
-import type { Task } from '@/components/items/task-item';
+import { Activity } from '@/components/types/activity.types';
+import { Task, TaskType } from '@/components/types/task.types';
 import { supabase } from '@/services/supabase';
-
-type SubcategoryType = Activity['type'];
 
 type TaskRow = {
   id: string;
-  subcategory_id: string;
+  activity_id: string;
   title: string;
   description: string | null;
-  type: 'BOOLEAN' | 'PROGRESSIVE' | 'FINITE';
+  type: TaskType;
   status: 'PENDING' | 'COMPLETED';
   xp_reward: number;
 };
 
-export type SubcategoryRow = {
+export type ActivityRow = {
   id: string;
   name: string;
-  tasks_or_goals: TaskRow[] | null;
+  tasks: TaskRow[] | null;
 };
 
 export type NewActivity = {
@@ -25,12 +23,12 @@ export type NewActivity = {
   name: string;
 };
 
-export function toActivity(subcategory: SubcategoryRow): Activity {
-  const rawTasks = subcategory.tasks_or_goals ?? [];
+export function toActivity(activity: ActivityRow): Activity {
+  const rawTasks = activity.tasks ?? [];
 
   const tasks: Task[] = rawTasks.map((t) => ({
     id: t.id,
-    subcategory_id: t.subcategory_id,
+    activity_id: t.activity_id,
     title: t.title,
     description: t.description ?? undefined,
     type: t.type,
@@ -47,23 +45,23 @@ export function toActivity(subcategory: SubcategoryRow): Activity {
   };
 
   const baseActivity = {
-    id: subcategory.id,
-    name: subcategory.name,
-    desc: descriptions[primaryType] || 'Subcategoria',
+    id: activity.id,
+    name: activity.name,
+    desc: descriptions[primaryType] || 'Atividade',
     tasks,
   };
 
   if (primaryType === 'BOOLEAN') {
-    return { ...baseActivity, type: 'BOOLEAN', done: false };
+    return { ...baseActivity, done: false };
   }
   if (primaryType === 'FINITE') {
-    return { ...baseActivity, type: 'FINITE', progress: 0 };
+    return { ...baseActivity, progress: 0 };
   }
-  return { ...baseActivity, type: 'PROGRESSIVE' };
+  return { ...baseActivity, };
 }
 
 export async function createActivity({ categoryId, name }: NewActivity) {
-  const { error } = await supabase.from('subcategories').insert({
+  const { error } = await supabase.from('activities').insert({
     category_id: categoryId,
     name,
   });
@@ -72,7 +70,7 @@ export async function createActivity({ categoryId, name }: NewActivity) {
 }
 
 export async function updateActivity({ id, name }: { id: string; name: string; type?: string }) {
-  const { error } = await supabase.from('subcategories').update({ name }).eq('id', id);
+  const { error } = await supabase.from('activities').update({ name }).eq('id', id);
 
   if (error) throw error;
 }

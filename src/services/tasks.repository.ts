@@ -1,7 +1,7 @@
 import { supabase } from "@/services/supabase";
 
 export type CreateTaskDTO = {
-  subcategoryId: string;
+  activityId: string;
   title: string;
   description?: string;
   type: "BOOLEAN" | "PROGRESSIVE" | "FINITE";
@@ -18,7 +18,7 @@ export type CreateTaskDTO = {
 };
 
 export async function createTask({
-  subcategoryId,
+  activityId,
   title,
   description,
   type,
@@ -33,9 +33,9 @@ export async function createTask({
   currentProgress,
   metadata
 }: CreateTaskDTO) {
-  const { data, error } = await supabase.from("tasks_or_goals").insert([
+  const { data, error } = await supabase.from("tasks").insert([
     {
-      subcategory_id: subcategoryId,
+      activity_id: activityId,
       title: title.trim(),
       description: description?.trim() || null,
       type,

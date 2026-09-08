@@ -1,3 +1,5 @@
+import { TaskLog } from "./task-log.type";
+
 export enum TaskType {
   BOOLEAN = "BOOLEAN",
   PROGRESSIVE = "PROGRESSIVE",
@@ -6,7 +8,7 @@ export enum TaskType {
 
 export type Task = {
   id: string;
-  subcategory_id: string;
+  activity_id: string;
   title: string;
   description?: string;
   type: TaskType;
@@ -20,10 +22,11 @@ export type Task = {
   target_value?: number;
   unit_of_measurement?: string;
   current_progress?: number;
+  task_logs?: TaskLog[];
 };
 
 export type CreateTaskDTO = {
-  subcategoryId: string;
+  activityId: string;
   title: string;
   description?: string;
   type: TaskType;

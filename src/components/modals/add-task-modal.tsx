@@ -12,7 +12,7 @@ import type { ComponentStyles } from "@/constants/component-styles";
 
 type AddTaskModalProps = {
   visible: boolean;
-  subcategoryId: string;
+  activityId: string;
   theme: any;
   styles: ComponentStyles;
   loading?: boolean;

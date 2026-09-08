@@ -1,12 +1,13 @@
 
 import { Activity } from '@/components/types/activity.types';
 import { Category } from '@/components/types/category.type';
+import { TaskLog } from '@/components/types/task-log.type';
 import { Task } from '@/components/types/task.types';
 import { supabase } from '@/services/supabase';
 
 type TaskRow = {
   id: string;
-  subcategory_id: string;
+  activity_id: string;
   title: string;
   description: string | null;
   type: Task['type'];
@@ -21,12 +22,14 @@ type TaskRow = {
   unit_of_measurement: string | null;
   current_progress: number | null;
   metadata: Record<string, any> | null;
+  task_logs: TaskLog[] | null;
 };
 
-type SubcategoryRow = {
+type ActivityRow = {
   id: string;
   name: string;
-  tasks_or_goals: TaskRow[] | null;
+  description: string | null;
+  tasks: TaskRow[] | null;
 };
 
 type CategoryRow = {
@@ -34,7 +37,7 @@ type CategoryRow = {
   name: string;
   icon: string;
   level: number;
-  subcategories: SubcategoryRow[] | null;
+  activities: ActivityRow[] | null;
 };
 
 export type NewActivity = {
@@ -49,18 +52,27 @@ export type CategoryUpdate = {
 };
 
 // Converte a subcategoria e mapeia suas tasks para o formato esperado pelo frontend
-function toActivity(subcategory: SubcategoryRow): Activity {
-  const rawTasks = subcategory.tasks_or_goals ?? [];
+function toActivity(activity: ActivityRow): Activity {
+  const rawTasks = activity.tasks ?? [];
 
   // Transforma as tarefas do banco para o formato do componente TaskItem
   const tasks: Task[] = rawTasks.map((t) => ({
     id: t.id,
-    subcategory_id: t.subcategory_id,
+    activity_id: t.activity_id,
     title: t.title,
     description: t.description ?? undefined,
     type: t.type,
     status: t.status,
     xp_reward: t.xp_reward,
+    frequence: t.frequence ?? undefined,
+    target_weight: t.target_weight ?? undefined,
+    target_repetitions: t.target_repetitions ?? undefined,
+    target_distance_km: t.target_distance_km ?? undefined,
+    target_duration_min: t.target_duration_min ?? undefined,
+    target_value: t.target_value ?? undefined,
+    unit_of_measurement: t.unit_of_measurement ?? undefined,
+    current_progress: t.current_progress ?? undefined,
+    task_logs: t.task_logs ?? [], // Inicializa como um array vazio; os logs podem ser carregados separadamente
   }));
 
   // Como a subcategoria agrupa tarefas, podemos pegar o tipo da primeira tarefa ou usar um padrão
@@ -73,9 +85,9 @@ function toActivity(subcategory: SubcategoryRow): Activity {
   };
 
   const baseActivity = {
-    id: subcategory.id,
-    name: subcategory.name,
-    desc: descriptions[primaryType] || 'Subcategoria',
+    id: activity.id,
+    name: activity.name,
+    desc: descriptions[primaryType] || 'Atividade',
     tasks,
   };
 
@@ -95,12 +107,13 @@ export async function getCategories(): Promise<Category[]> {
     name,
     icon,
     level,
-    subcategories (
+    activities (
       id,
       name,
-      tasks_or_goals (
+      description,
+      tasks (
         id,
-        subcategory_id,
+        activity_id,
         title,
         description,
         type,
@@ -114,10 +127,23 @@ export async function getCategories(): Promise<Category[]> {
         target_value,
         unit_of_measurement,
         current_progress,
-        metadata
+        metadata,
+        task_logs (
+          id,
+          xp_gained,
+          executed_weight,
+          executed_repetitions,
+          executed_distance_km,
+          executed_duration_min,
+          current_progress,
+          created_at
+        )
       )
     )
-  `);
+  `)
+    // Ordena os logs de forma decrescente pela data e limita a 1 por task
+    .order('created_at', { referencedTable: 'activities.tasks.task_logs', ascending: false })
+    .limit(1, { referencedTable: 'activities.tasks.task_logs' });
 
   if (error) throw error;
 
@@ -126,7 +152,7 @@ export async function getCategories(): Promise<Category[]> {
     name: category.name,
     icon: category.icon,
     level: category.level,
-    activities: (category.subcategories ?? []).map(toActivity),
+    activities: (category.activities ?? []).map(toActivity),
   }));
 }
 export async function updateCategory({ id, name, icon }: CategoryUpdate) {

@@ -25,27 +25,28 @@ function getTaskTypeDetails(type: Task["type"]) {
   }
 }
 
+// Helper simples para formatar a data do último log (Ex: "Há 2 dias" ou data legível)
+function formatLastUpdate(dateString?: string) {
+  if (!dateString) return "Nenhuma execução";
+  const date = new Date(dateString);
+  return `Últ. alt.: ${date.toLocaleDateString()} às ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+}
+
 export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const taskDetails = getTaskTypeDetails(task.type);
-
+  console.log("TaskItem renderizado com task:", task);
   // Validação e cálculo para a barra de progresso de tarefas finitas
   const isFiniteWithTarget =
     task.type === "FINITE" &&
     task.target_value !== undefined &&
     task.target_value > 0;
 
-  console.log(
-    "TaskItem - isFiniteWithTarget:",
-    isFiniteWithTarget,
-    "task.target_value:",
-    task.target_value,
-  );
-
   const currentProg = task.current_progress ?? 0;
   const targetVal = task.target_value ?? 1;
+  const unit = task.unit_of_measurement ?? "";
   const progressPercentage = isFiniteWithTarget
     ? Math.min(Math.round((currentProg / targetVal) * 100), 100)
     : 0;
@@ -58,6 +59,26 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
           task.target_repetitions ? `${task.target_repetitions} reps` : null,
           task.target_distance_km ? `${task.target_distance_km} km` : null,
           task.target_duration_min ? `${task.target_duration_min} min` : null,
+        ]
+          .filter(Boolean)
+          .join(" • ")
+      : null;
+
+  const currentProgressDetails =
+    task.type === "PROGRESSIVE" && task?.task_logs?.length
+      ? [
+          task?.task_logs?.[0]?.executed_weight
+            ? `${task.task_logs[0].executed_weight}kg`
+            : null,
+          task?.task_logs?.[0]?.executed_repetitions
+            ? `${task.task_logs[0].executed_repetitions} reps`
+            : null,
+          task?.task_logs?.[0]?.executed_distance_km
+            ? `${task.task_logs[0].executed_distance_km} km`
+            : null,
+          task?.task_logs?.[0]?.executed_duration_min
+            ? `${task.task_logs[0].executed_duration_min} min`
+            : null,
         ]
           .filter(Boolean)
           .join(" • ")
@@ -105,31 +126,51 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
         <View style={{ flex: 1, paddingRight: 8 }}>
           <View
             style={{
+              flex: 1,
               flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              marginBottom: 2,
+              justifyContent: "space-between",
+              paddingRight: 8,
             }}
           >
-            <Text style={styles.taskName}>
-              {taskDetails.icon} {task.title}
-            </Text>
-          </View>
-
-          {/* Se for progressiva, exibe os valores das métricas */}
-          {task.type === "PROGRESSIVE" && progressiveDetails ? (
-            <Text
+            <View
               style={{
-                fontSize: 11,
-                color: theme.ink,
-                opacity: 0.7,
-                marginBottom: 4,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                marginBottom: 2,
               }}
             >
-              Metas: {progressiveDetails}
-            </Text>
-          ) : null}
-
+              <Text style={styles.taskName}>
+                {taskDetails.icon} {task.title}
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Text style={styles.taskTag}>+{task.xp_reward} XP</Text>
+              <TouchableOpacity
+                style={[
+                  styles.buttonOutline,
+                  {
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
+                    borderColor: theme.hairline,
+                  },
+                ]}
+                onPress={() => setIsLogModalOpen(true)}
+              >
+                <Text
+                  style={{ fontSize: 11, fontWeight: "600", color: theme.ink }}
+                >
+                  ⚡
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
           <View
             style={{
               flexDirection: "row",
@@ -141,11 +182,35 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
             {task.description ? (
               <Text style={styles.taskDesc}>{task.description}</Text>
             ) : null}
-
-            <Text style={styles.taskTag}>+{task.xp_reward} XP</Text>
           </View>
 
-          {/* Barra de progresso na mesma linha/bloco de descrição e XP para FINITE com target_value */}
+          {/* Se for progressiva, exibe os valores das métricas */}
+          {task.type === "PROGRESSIVE" && progressiveDetails ? (
+            <View>
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: theme.ink,
+                  opacity: 0.7,
+                  marginBottom: 4,
+                }}
+              >
+                Metas: {progressiveDetails}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: theme.ink,
+                  opacity: 0.7,
+                  marginBottom: 4,
+                }}
+              >
+                Ult.: {currentProgressDetails}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Barra de progresso para FINITE com target_value */}
           {isFiniteWithTarget ? (
             <View style={{ marginTop: 2 }}>
               <View
@@ -155,8 +220,8 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                   marginBottom: 2,
                 }}
               >
-                <Text style={{ fontSize: 10, color: theme.muted }}>
-                  Progresso: {currentProg} / {targetVal}
+                <Text style={styles.infoDesc}>
+                  Prog: {currentProg} / {targetVal} ({unit})
                 </Text>
                 <Text
                   style={{ fontSize: 10, fontWeight: "700", color: theme.ink }}
@@ -182,24 +247,12 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
               </View>
             </View>
           ) : null}
-        </View>
 
-        {/* Botão para registrar métricas reais via RPC */}
-        <TouchableOpacity
-          style={[
-            styles.buttonOutline,
-            {
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderColor: theme.hairline,
-            },
-          ]}
-          onPress={() => setIsLogModalOpen(true)}
-        >
-          <Text style={{ fontSize: 11, fontWeight: "600", color: theme.ink }}>
-            ⚡ Registrar
+          {/* Informação da última alteração baseada no último task_log */}
+          <Text style={styles.infoDesc}>
+            {formatLastUpdate(task.task_logs?.[0]?.created_at)}
           </Text>
-        </TouchableOpacity>
+        </View>
       </View>
 
       <RegisterLogModal
