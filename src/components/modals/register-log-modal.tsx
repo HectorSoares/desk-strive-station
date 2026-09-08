@@ -21,6 +21,8 @@ type RegisterLogModalProps = {
     executedRepetitions?: number;
     executedDistanceKm?: number;
     executedDurationMin?: number;
+    executedSets?: number;
+    currentProgress?: number;
   }) => void;
 };
 
@@ -33,8 +35,11 @@ export function RegisterLogModal({
 }: RegisterLogModalProps) {
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
+  const [series, setSeries] = useState("");
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
+  const [currentProgress, setCurrentProgress] = useState("");
+  const [targetValue, setTargetValue] = useState("");
 
   if (!visible) return null;
 
@@ -49,51 +54,80 @@ export function RegisterLogModal({
         <View style={[localStyles.content, { backgroundColor: "#fff" }]}>
           <Text style={localStyles.title}>Registrar Execução</Text>
           <Text style={localStyles.subtitle}>{task.title}</Text>
+          {(task.target_weight ||
+            task.target_repetitions ||
+            task.target_sets) && (
+            <View style={localStyles.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={localStyles.label}>Peso (kg)</Text>
+                <TextInput
+                  style={localStyles.input}
+                  keyboardType="numeric"
+                  placeholder="Ex: 50"
+                  value={weight}
+                  onChangeText={setWeight}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={localStyles.label}>Repetições</Text>
+                <TextInput
+                  style={localStyles.input}
+                  keyboardType="numeric"
+                  placeholder="Ex: 12"
+                  value={reps}
+                  onChangeText={setReps}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={localStyles.label}>Series</Text>
+                <TextInput
+                  style={localStyles.input}
+                  keyboardType="numeric"
+                  placeholder="Ex: 3"
+                  value={series}
+                  onChangeText={setSeries}
+                />
+              </View>
+            </View>
+          )}
 
           <View style={localStyles.row}>
-            <View style={{ flex: 1 }}>
-              <Text style={localStyles.label}>Peso Executado (kg)</Text>
-              <TextInput
-                style={localStyles.input}
-                keyboardType="numeric"
-                placeholder="Ex: 50"
-                value={weight}
-                onChangeText={setWeight}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={localStyles.label}>Repetições</Text>
-              <TextInput
-                style={localStyles.input}
-                keyboardType="numeric"
-                placeholder="Ex: 12"
-                value={reps}
-                onChangeText={setReps}
-              />
-            </View>
-          </View>
-
-          <View style={localStyles.row}>
-            <View style={{ flex: 1 }}>
-              <Text style={localStyles.label}>Distância (km)</Text>
-              <TextInput
-                style={localStyles.input}
-                keyboardType="numeric"
-                placeholder="Ex: 5"
-                value={distance}
-                onChangeText={setDistance}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={localStyles.label}>Duração (min)</Text>
-              <TextInput
-                style={localStyles.input}
-                keyboardType="numeric"
-                placeholder="Ex: 30"
-                value={duration}
-                onChangeText={setDuration}
-              />
-            </View>
+            {task.target_distance && (
+              <View style={{ flex: 1 }}>
+                <Text style={localStyles.label}>Distância (km)</Text>
+                <TextInput
+                  style={localStyles.input}
+                  keyboardType="numeric"
+                  placeholder="Ex: 5"
+                  value={distance}
+                  onChangeText={setDistance}
+                />
+              </View>
+            )}
+            {task.target_duration_min && (
+              <View style={{ flex: 1 }}>
+                <Text style={localStyles.label}>Duração (min)</Text>
+                <TextInput
+                  style={localStyles.input}
+                  keyboardType="numeric"
+                  placeholder="Ex: 30"
+                  value={duration}
+                  onChangeText={setDuration}
+                />
+              </View>
+            )}
+            {task.current_progress !== undefined && (
+              <View style={{ flex: 1 }}>
+                <Text style={localStyles.label}>Progresso</Text>
+                <TextInput
+                  style={localStyles.input}
+                  keyboardType="numeric"
+                  placeholder="Ex: 30"
+                  value={currentProgress}
+                  onChangeText={setCurrentProgress}
+                />
+              </View>
+            )}
           </View>
 
           <View style={localStyles.actions}>
@@ -113,11 +147,17 @@ export function RegisterLogModal({
                   executedRepetitions: reps ? Number(reps) : undefined,
                   executedDistanceKm: distance ? Number(distance) : undefined,
                   executedDurationMin: duration ? Number(duration) : undefined,
+                  executedSets: series ? Number(series) : undefined,
+                  currentProgress: currentProgress
+                    ? Number(currentProgress)
+                    : undefined,
                 });
                 setWeight("");
                 setReps("");
                 setDistance("");
                 setDuration("");
+                setSeries("");
+                setCurrentProgress("");
               }}
               disabled={loading}
             >

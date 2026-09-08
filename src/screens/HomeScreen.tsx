@@ -20,7 +20,8 @@ import {
   type UserProfile,
 } from "@/services/user_profile.repository";
 import { Category } from "@/components/types/category.type";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { getColorByPercentage } from "@/utils/color.utils";
 
 export default function HomeScreen() {
   const [themeName, setThemeName] = useState<"light" | "dark">("light");
@@ -126,8 +127,10 @@ export default function HomeScreen() {
               <Text style={styles.headingSm}>Nível {currentLevel}</Text>
               <Text style={styles.textBodyLg}>{xpProgress}%</Text>
             </View>
+
             <Text style={styles.textMuted}>
-              🔥 {streakDays} dias seguidos ativos
+              <Ionicons name="flame-outline" size={16} color={theme.ink} />{" "}
+              {streakDays} dias seguidos ativos
             </Text>
             <View style={styles.progressBarBg}>
               <View

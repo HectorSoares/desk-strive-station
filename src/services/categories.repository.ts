@@ -142,7 +142,7 @@ export async function getCategories(): Promise<Category[]> {
     )
   `)
     // Ordena os logs de forma decrescente pela data e limita a 1 por task
-    .order('created_at', { referencedTable: 'activities.tasks.task_logs', ascending: false })
+    .order('name').order('title', { referencedTable: 'activities.tasks' }).order('created_at', { referencedTable: 'activities.tasks.task_logs', ascending: false })
     .limit(1, { referencedTable: 'activities.tasks.task_logs' });
 
   if (error) throw error;

@@ -33,6 +33,8 @@ type RegisterLogDTO = {
   executedRepetitions?: number;
   executedDistanceKm?: number;
   executedDurationMin?: number;
+  executedSets?: number;
+  currentProgress?: number;
 };
 
 export async function registerActivityLog({
@@ -41,6 +43,8 @@ export async function registerActivityLog({
   executedRepetitions,
   executedDistanceKm,
   executedDurationMin,
+  executedSets,
+  currentProgress,
 }: RegisterLogDTO) {
   const { data, error } = await supabase.rpc("register_activity_log", {
     p_task_id: taskId,
@@ -48,6 +52,8 @@ export async function registerActivityLog({
     p_executed_repetitions: executedRepetitions ?? null,
     p_executed_distance_km: executedDistanceKm ?? null,
     p_executed_duration_min: executedDurationMin ?? null,
+    p_executed_sets: executedSets ?? null,
+    p_current_progress: currentProgress ?? null,
   });
 
   if (error) {

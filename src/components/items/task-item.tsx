@@ -5,6 +5,7 @@ import { RegisterLogModal } from "@/components/modals/register-log-modal";
 import { registerActivityLog } from "@/services/activity-logs.repository";
 import { Task } from "../types/task.types";
 import { Feather } from "@expo/vector-icons";
+import { getColorByPercentage } from "@/utils/color.utils";
 
 type TaskItemProps = {
   task: Task;
@@ -90,6 +91,8 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
     executedRepetitions?: number;
     executedDistanceKm?: number;
     executedDurationMin?: number;
+    executedSets?: number;
+    currentProgress?: number;
   }) {
     setLoading(true);
     try {
@@ -99,6 +102,8 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
         executedRepetitions: metrics.executedRepetitions,
         executedDistanceKm: metrics.executedDistanceKm,
         executedDurationMin: metrics.executedDurationMin,
+        executedSets: metrics.executedSets,
+        currentProgress: metrics.currentProgress,
       });
 
       setIsLogModalOpen(false);
@@ -145,6 +150,7 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                 {taskDetails.icon} {task.title}
               </Text>
             </View>
+
             <View
               style={{
                 flexDirection: "row",
@@ -152,6 +158,19 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                 gap: 6,
               }}
             >
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 6,
+                  backgroundColor: getColorByPercentage(
+                    progressPercentage,
+                    theme.progressGradient,
+                  ),
+                  borderWidth: 1,
+                  borderColor: theme.inkSoft,
+                }}
+              />
               <Text style={styles.taskTag}>+{task.xp_reward} XP</Text>
               <TouchableOpacity
                 style={[
