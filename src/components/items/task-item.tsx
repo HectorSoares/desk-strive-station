@@ -4,6 +4,7 @@ import type { ComponentStyles } from "@/constants/component-styles";
 import { RegisterLogModal } from "@/components/modals/register-log-modal";
 import { registerActivityLog } from "@/services/activity-logs.repository";
 import { Task } from "../types/task.types";
+import { Feather } from "@expo/vector-icons";
 
 type TaskItemProps = {
   task: Task;
@@ -163,11 +164,7 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                 ]}
                 onPress={() => setIsLogModalOpen(true)}
               >
-                <Text
-                  style={{ fontSize: 11, fontWeight: "600", color: theme.ink }}
-                >
-                  ⚡
-                </Text>
+                <Feather name="zap" size={18} color={theme.yellow} />
               </TouchableOpacity>
             </View>
           </View>
@@ -186,26 +183,39 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
 
           {/* Se for progressiva, exibe os valores das métricas */}
           {task.type === "PROGRESSIVE" && progressiveDetails ? (
-            <View>
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: theme.ink,
-                  opacity: 0.7,
-                  marginBottom: 4,
-                }}
-              >
-                Metas: {progressiveDetails}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: theme.ink,
-                  opacity: 0.7,
-                  marginBottom: 4,
-                }}
-              >
-                Ult.: {currentProgressDetails}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <View>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: theme.ink,
+                    opacity: 0.7,
+                    marginBottom: 4,
+                  }}
+                >
+                  Metas: {progressiveDetails}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: theme.ink,
+                    opacity: 0.7,
+                    marginBottom: 4,
+                  }}
+                >
+                  Ult.: {currentProgressDetails}
+                </Text>
+              </View>
+              {/* Informação da última alteração baseada no último task_log */}
+              <Text style={styles.infoDesc}>
+                {formatLastUpdate(task.task_logs?.[0]?.created_at)}
               </Text>
             </View>
           ) : null}
@@ -247,11 +257,6 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
               </View>
             </View>
           ) : null}
-
-          {/* Informação da última alteração baseada no último task_log */}
-          <Text style={styles.infoDesc}>
-            {formatLastUpdate(task.task_logs?.[0]?.created_at)}
-          </Text>
         </View>
       </View>
 

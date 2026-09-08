@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { Feather } from "@expo/vector-icons"; // 👈 Importação dos ícones
 import type { ComponentStyles } from "@/constants/component-styles";
 import { EditActivityModal } from "@/components/modals/edit-activity-modal";
 import { AddTaskModal } from "@/components/modals/add-task-modal";
@@ -26,8 +27,9 @@ export function ActivityItem({
 }: ActivityItemProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [loading, setLoading] = useState(false);
-  console.log("ActivityItem renderizado com activity:", activity);
+
   async function handleSaveTask(taskData: {
     title: string;
     description: string;
@@ -70,18 +72,6 @@ export function ActivityItem({
     }
   }
 
-  async function handleCompleteTask(taskId: string, xpReward: number) {
-    try {
-      await createActivityLog({
-        taskId: taskId,
-        xpGained: xpReward,
-      });
-      if (onRefresh) onRefresh();
-    } catch (error) {
-      console.error("Erro ao concluir task:", error);
-    }
-  }
-
   async function handleSaveActivity(id: string, name: string) {
     if (!name.trim()) return;
 
@@ -91,7 +81,7 @@ export function ActivityItem({
       setIsEditModalOpen(false);
       if (onRefresh) onRefresh();
     } catch (error) {
-      console.error("Erro ao atualizar subcategoria:", error);
+      console.error("Erro ao atualizar atividade:", error);
     } finally {
       setLoading(false);
     }
@@ -102,30 +92,50 @@ export function ActivityItem({
       <View
         style={[
           styles.activityItem,
-          isLast && !activity.tasks?.length && styles.noBorder,
+          isLast && (!isExpanded || !activity.tasks?.length) && styles.noBorder,
         ]}
       >
         <TouchableOpacity
           style={[styles.activityInfo, { flex: 1 }]}
           onPress={() => setIsEditModalOpen(true)}
         >
-          <Text style={styles.activityName}>{activity.name} ✏️</Text>
+          <Text style={styles.activityName}>{activity.name}</Text>
           <Text style={styles.activityDesc}>{activity.desc}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={{ padding: 8, marginRight: 8 }}
-          onPress={() => setIsAddTaskModalOpen(true)}
-        >
-          <Text style={{ fontSize: 16 }}>➕📋</Text>
-        </TouchableOpacity>
+        {/* Grupo de Ações com Ícones Reais */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+          <TouchableOpacity
+            style={{ padding: 8 }}
+            onPress={() => setIsAddTaskModalOpen(true)}
+          >
+            <Feather name="plus-circle" size={18} color={theme.ink} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ padding: 8, marginRight: 2 }}
+            onPress={() => setIsExpanded((current) => !current)}
+          >
+            <Feather
+              name={isExpanded ? "chevron-down" : "chevron-right"}
+              size={18}
+              color={theme.ink}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Renderização da listagem de Tasks vinculadas a esta subcategoria */}
-      {activity.tasks && activity.tasks.length > 0 && (
+      {/* Renderização condicional da listagem de Tasks vinculadas */}
+      {isExpanded && activity.tasks && activity.tasks.length > 0 && (
         <View style={{ paddingLeft: 12, paddingBottom: 8 }}>
           {activity.tasks.map((task) => (
-            <TaskItem theme={theme} key={task.id} task={task} styles={styles} />
+            <TaskItem
+              theme={theme}
+              key={task.id}
+              task={task}
+              styles={styles}
+              onRefresh={onRefresh}
+            />
           ))}
         </View>
       )}

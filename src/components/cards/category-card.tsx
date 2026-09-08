@@ -1,54 +1,110 @@
+import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import type { ComponentStyles } from "@/constants/component-styles";
 import { ActivityItem } from "../items/activity-item";
 import { Category } from "../types/category.type";
+import { EditCategoryModal } from "@/components/modals/edit-category-modal";
+import { updateCategory } from "@/services/categories.repository";
 
 type CategoryCardProps = {
   category: Category;
   styles: ComponentStyles;
-  theme: any; // 👈 Adicionado aqui
-  onEditCategory?: (category: Category) => void;
+  theme: any;
+  loading?: boolean;
+  onRefresh?: () => void;
 };
 
 export function CategoryCard({
   category,
   styles,
-  theme, // 👈 Recebido aqui
-  onEditCategory,
+  theme,
+  loading: globalLoading,
+  onRefresh,
 }: CategoryCardProps) {
-  console.log("CategoryCard renderizado com category:", category); // Adicionado para depuração
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(category.name);
+  const [editIcon, setEditIcon] = useState(category.icon);
+  const [loading, setLoading] = useState(false);
+
+  async function handleUpdateCategory() {
+    if (!editName.trim()) return;
+
+    setLoading(true);
+    try {
+      await updateCategory({
+        id: category.id,
+        name: editName.trim(),
+        icon: editIcon.trim() || "📁",
+      });
+      setIsEditing(false);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Erro ao atualizar categoria:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>
-          {category.icon} {category.name}
-        </Text>
+    <>
+      <View style={[styles.card, { position: "relative" }]}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>
+            {category.icon} {category.name}
+          </Text>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View style={styles.badgeSoft}>
-            <Text style={styles.badgeSoftText}>Nvl {category.level}</Text>
-          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <View style={styles.badgeSoft}>
+              <Text style={styles.badgeSoftText}>Nvl {category.level}</Text>
+            </View>
 
-          {onEditCategory && (
+            {/* Botão de editar categoria integrado no card */}
             <TouchableOpacity
-              onPress={() => onEditCategory(category)}
-              style={{ padding: 4 }}
+              onPress={() => {
+                setEditName(category.name);
+                setEditIcon(category.icon);
+                setIsEditing(true);
+              }}
+              style={[
+                {
+                  backgroundColor: theme.canvas,
+                  borderColor: theme.hairline,
+                  borderWidth: 1,
+                  padding: 6,
+                  borderRadius: 12,
+                },
+              ]}
             >
-              <Text style={{ fontSize: 14 }}>⚙️</Text>
+              <Feather name="edit" size={14} color={theme.ink} />
             </TouchableOpacity>
-          )}
+          </View>
         </View>
+
+        {category.activities.map((activity, index) => (
+          <ActivityItem
+            key={activity.id}
+            activity={activity}
+            isLast={index === category.activities.length - 1}
+            styles={styles}
+            theme={theme}
+            onRefresh={onRefresh}
+          />
+        ))}
       </View>
 
-      {category.activities.map((activity, index) => (
-        <ActivityItem
-          key={activity.id}
-          activity={activity}
-          isLast={index === category.activities.length - 1}
-          styles={styles}
-          theme={theme} // 👈 Repassado corretamente para o item
-        />
-      ))}
-    </View>
+      {/* Modal de Edição isolado no card */}
+      <EditCategoryModal
+        visible={isEditing}
+        name={editName}
+        icon={editIcon}
+        theme={theme}
+        loading={loading}
+        onClose={() => setIsEditing(false)}
+        onNameChange={setEditName}
+        onIconChange={setEditIcon}
+        onSubmit={handleUpdateCategory}
+      />
+    </>
   );
 }

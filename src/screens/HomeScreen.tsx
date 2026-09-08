@@ -3,7 +3,6 @@ import {
   Pressable,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -12,19 +11,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CategoryCard } from "@/components/cards/category-card";
 import { AddActivityModal } from "@/components/modals/add-activity-modal";
-import { EditCategoryModal } from "@/components/modals/edit-category-modal";
 import { createComponentStyles } from "@/constants/component-styles";
 import { colors } from "@/constants/theme";
-import {
-  getCategories,
-  updateCategory,
-} from "@/services/categories.repository";
+import { getCategories } from "@/services/categories.repository";
 import { createActivity } from "@/services/activities.repository";
 import {
   getUserProfile,
   type UserProfile,
 } from "@/services/user_profile.repository";
 import { Category } from "@/components/types/category.type";
+import { Feather } from "@expo/vector-icons";
 
 export default function HomeScreen() {
   const [themeName, setThemeName] = useState<"light" | "dark">("light");
@@ -34,9 +30,6 @@ export default function HomeScreen() {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [activityName, setActivityName] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [editCategoryName, setEditCategoryName] = useState("");
-  const [editCategoryIcon, setEditCategoryIcon] = useState("");
 
   const isDark = themeName === "dark";
   const theme = colors[themeName];
@@ -66,7 +59,6 @@ export default function HomeScreen() {
     void loadData();
   }, []);
 
-  // Calcula a porcentagem de progresso de XP para o nível atual (a cada 500 XP)
   const currentTotalXp = profile?.total_xp ?? 0;
   const currentLevel = profile?.level ?? 1;
   const xpIntoCurrentLevel = currentTotalXp % 500;
@@ -76,18 +68,6 @@ export default function HomeScreen() {
   function closeAddModal() {
     setIsAddModalVisible(false);
     setActivityName("");
-  }
-
-  function openEditCategory(category: Category) {
-    setEditingCategory(category);
-    setEditCategoryName(category.name);
-    setEditCategoryIcon(category.icon);
-  }
-
-  function closeEditModal() {
-    setEditingCategory(null);
-    setEditCategoryName("");
-    setEditCategoryIcon("");
   }
 
   async function handleAddActivity() {
@@ -103,25 +83,6 @@ export default function HomeScreen() {
       closeAddModal();
     } catch (error) {
       console.error("Erro ao salvar atividade:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleUpdateCategory() {
-    if (!editingCategory || !editCategoryName.trim()) return;
-
-    setLoading(true);
-    try {
-      await updateCategory({
-        id: editingCategory.id,
-        name: editCategoryName.trim(),
-        icon: editCategoryIcon.trim() || "📁",
-      });
-      await loadData();
-      closeEditModal();
-    } catch (error) {
-      console.error("Erro ao atualizar categoria:", error);
     } finally {
       setLoading(false);
     }
@@ -149,7 +110,11 @@ export default function HomeScreen() {
           ]}
           testID="theme-toggle"
         >
-          <Text style={styles.themeButtonText}>{isDark ? "☀️" : "🌙"}</Text>
+          {isDark ? (
+            <Feather name="sun" size={18} color={theme.yellow} />
+          ) : (
+            <Feather name="moon" size={18} color={theme.blue} />
+          )}
         </Pressable>
 
         <View style={styles.header}>
@@ -172,19 +137,16 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Renderiza os cards de categoria passando a função de recarregamento */}
         {categories.map((category) => (
-          <View key={category.id} style={localStyles.categoryWrapper}>
-            <CategoryCard category={category} styles={styles} theme={theme} />
-            <TouchableOpacity
-              style={[
-                localStyles.editCategoryButton,
-                { backgroundColor: theme.canvas, borderColor: theme.hairline },
-              ]}
-              onPress={() => openEditCategory(category)}
-            >
-              <Text style={{ fontSize: 12, color: theme.ink }}>⚙️ Editar</Text>
-            </TouchableOpacity>
-          </View>
+          <CategoryCard
+            key={category.id}
+            category={category}
+            styles={styles}
+            theme={theme}
+            loading={loading}
+            onRefresh={loadData}
+          />
         ))}
       </ScrollView>
 
@@ -207,31 +169,6 @@ export default function HomeScreen() {
         onCategoryChange={setSelectedCategoryId}
         onSubmit={handleAddActivity}
       />
-      <EditCategoryModal
-        visible={editingCategory !== null}
-        name={editCategoryName}
-        icon={editCategoryIcon}
-        theme={theme}
-        loading={loading}
-        onClose={closeEditModal}
-        onNameChange={setEditCategoryName}
-        onIconChange={setEditCategoryIcon}
-        onSubmit={handleUpdateCategory}
-      />
     </SafeAreaView>
   );
 }
-
-const localStyles = StyleSheet.create({
-  categoryWrapper: { position: "relative" },
-  editCategoryButton: {
-    position: "absolute",
-    top: 16,
-    right: 20,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    zIndex: 10,
-  },
-});

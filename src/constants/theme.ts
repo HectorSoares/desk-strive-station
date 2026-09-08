@@ -18,11 +18,11 @@ export const radius = {
 export const colors = {
   light: {
     canvas: '#f5f5f5', paper: '#ffffff', ink: '#0a0a0a', inkSoft: '#171717',
-    midGray: '#737373', hairline: '#e5e5e5', destructive: '#e7000b',
+    midGray: '#737373', hairline: '#e5e5e5', destructive: '#e7000b', yellow: '#f7c500', green: '#10b981', blue: '#3b82f6',
   },
   dark: {
     canvas: '#0a0a0a', paper: '#121212', ink: '#fafafa', inkSoft: '#e5e5e5',
-    midGray: '#a3a3a3', hairline: '#262626', destructive: '#e7000b',
+    midGray: '#a3a3a3', hairline: '#262626', destructive: '#e7000b', yellow: '#f7c500', green: '#10b981', blue: '#3b82f6',
   },
 } as const;
 
