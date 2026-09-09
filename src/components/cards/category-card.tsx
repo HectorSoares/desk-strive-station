@@ -5,7 +5,7 @@ import type { ComponentStyles } from "@/constants/component-styles";
 import { ActivityItem } from "../items/activity-item";
 import { Category } from "../types/category.type";
 import { EditCategoryModal } from "@/components/modals/edit-category-modal";
-import { updateCategory } from "@/services/categories.repository";
+import { updateCategory } from "@/repositories/categories.repository";
 
 type CategoryCardProps = {
   category: Category;
@@ -35,10 +35,10 @@ export function CategoryCard({
       await updateCategory({
         id: category.id,
         name: editName.trim(),
-        icon: editIcon.trim() || "📁",
+        icon: editIcon.trim() || "folder",
       });
       setIsEditing(false);
-      if (onRefresh) onRefresh();
+      onRefresh?.();
     } catch (error) {
       console.error("Erro ao atualizar categoria:", error);
     } finally {
@@ -50,31 +50,33 @@ export function CategoryCard({
     <>
       <View style={[styles.card, { position: "relative" }]}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>
-            {category.icon} {category.name}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Feather
+              name={category.icon as keyof typeof Feather.glyphMap}
+              size={18}
+              color={theme.ink}
+            />
+            <Text style={styles.cardTitle}>{category.name}</Text>
+          </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <View style={styles.badgeSoft}>
               <Text style={styles.badgeSoftText}>Nvl {category.level}</Text>
             </View>
 
-            {/* Botão de editar categoria integrado no card */}
             <TouchableOpacity
               onPress={() => {
                 setEditName(category.name);
                 setEditIcon(category.icon);
                 setIsEditing(true);
               }}
-              style={[
-                {
-                  backgroundColor: theme.canvas,
-                  borderColor: theme.hairline,
-                  borderWidth: 1,
-                  padding: 6,
-                  borderRadius: 12,
-                },
-              ]}
+              style={{
+                backgroundColor: theme.canvas,
+                borderColor: theme.hairline,
+                borderWidth: 1,
+                padding: 6,
+                borderRadius: 12,
+              }}
             >
               <Feather name="edit" size={14} color={theme.ink} />
             </TouchableOpacity>
@@ -93,7 +95,6 @@ export function CategoryCard({
         ))}
       </View>
 
-      {/* Modal de Edição isolado no card */}
       <EditCategoryModal
         visible={isEditing}
         name={editName}

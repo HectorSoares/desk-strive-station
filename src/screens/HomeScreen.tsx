@@ -13,12 +13,12 @@ import { CategoryCard } from "@/components/cards/category-card";
 import { AddActivityModal } from "@/components/modals/add-activity-modal";
 import { createComponentStyles } from "@/constants/component-styles";
 import { colors } from "@/constants/theme";
-import { getCategories } from "@/services/categories.repository";
-import { createActivity } from "@/services/activities.repository";
+import { getCategories } from "@/repositories/categories.repository";
+import { createActivity } from "@/repositories/activities.repository";
 import {
   getUserProfile,
   type UserProfile,
-} from "@/services/user_profile.repository";
+} from "@/repositories/user_profile.repository";
 import { Category } from "@/components/types/category.type";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { getColorByPercentage } from "@/utils/color.utils";
@@ -62,8 +62,8 @@ export default function HomeScreen() {
 
   const currentTotalXp = profile?.total_xp ?? 0;
   const currentLevel = profile?.level ?? 1;
-  const xpIntoCurrentLevel = currentTotalXp % 500;
-  const xpProgress = Math.round((xpIntoCurrentLevel / 500) * 100);
+  const xpIntoCurrentLevel = currentTotalXp % 1000;
+  const xpProgress = Math.round((xpIntoCurrentLevel / 1000) * 100);
   const streakDays = profile?.streak_days ?? 0;
 
   function closeAddModal() {

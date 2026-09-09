@@ -3,20 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import 'react-native-url-polyfill/auto';
 
-const SUPABASE_URL = 'http://127.0.0.1:55321';
-const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || ''
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || ''
 
 const customStorage = Platform.OS === 'web' ? undefined : AsyncStorage;
 
-// Importa o ws de forma segura apenas se não for mobile nativo (ex: web ou bundler do Metro)
 let customTransport = undefined;
 if (Platform.OS === 'web') {
-  // Na web o browser já tem WebSocket nativo, mas se o Metro reclamar, podemos ajustar.
-  // No Node/Metro, se precisar do ws:
   try {
     customTransport = require('ws');
   } catch (e) {
-    // ignora se não estiver disponível
   }
 }
 

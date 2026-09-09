@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   StyleSheet,
@@ -8,7 +8,9 @@ import {
   View,
 } from "react-native";
 import type { ComponentStyles } from "@/constants/component-styles";
-import type { Task } from "@/components/items/task-item";
+import { Task, TASK_TYPES, GOAL_TYPES } from "../types/task.types";
+
+type ProgressMode = "INCREMENT" | "ABSOLUTE";
 
 type RegisterLogModalProps = {
   visible: boolean;
@@ -19,10 +21,10 @@ type RegisterLogModalProps = {
   onSubmit: (metrics: {
     executedWeight?: number;
     executedRepetitions?: number;
-    executedDistanceKm?: number;
-    executedDurationMin?: number;
     executedSets?: number;
+    executedValue?: number;
     currentProgress?: number;
+    progressMode?: ProgressMode;
   }) => void;
 };
 
@@ -36,17 +38,46 @@ export function RegisterLogModal({
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [series, setSeries] = useState("");
-  const [distance, setDistance] = useState("");
-  const [duration, setDuration] = useState("");
+  const [executedValue, setExecutedValue] = useState("");
   const [currentProgress, setCurrentProgress] = useState("");
-  const [targetValue, setTargetValue] = useState("");
+  const [progressMode, setProgressMode] = useState<ProgressMode>("INCREMENT");
+
+  useEffect(() => {
+    if (!visible) return;
+
+    setWeight("");
+    setReps("");
+    setSeries("");
+    setExecutedValue("");
+    setCurrentProgress("");
+    setProgressMode("INCREMENT");
+  }, [visible, task.id]);
 
   if (!visible) return null;
+
+  const isBoolean = task.type === TASK_TYPES.BOOLEAN;
+  const isQuantity = task.type === TASK_TYPES.QUANTITY;
+  const isProgress = task.type === TASK_TYPES.PROGRESS;
+  const isExercise = task.type === TASK_TYPES.EXERCISE;
+  const isComposite = task.type === TASK_TYPES.COMPOSITE;
+
+  const unit = task.unit_of_measurement ? ` (${task.unit_of_measurement})` : "";
+
+  function handleSubmit() {
+    onSubmit({
+      executedWeight: weight ? Number(weight) : undefined,
+      executedRepetitions: reps ? Number(reps) : undefined,
+      executedSets: series ? Number(series) : undefined,
+      executedValue: executedValue ? Number(executedValue) : undefined,
+      currentProgress: currentProgress ? Number(currentProgress) : undefined,
+      progressMode: isProgress ? progressMode : undefined,
+    });
+  }
 
   return (
     <Modal
       animationType="slide"
-      transparent={true}
+      transparent
       visible={visible}
       onRequestClose={onClose}
     >
@@ -54,81 +85,190 @@ export function RegisterLogModal({
         <View style={[localStyles.content, { backgroundColor: "#fff" }]}>
           <Text style={localStyles.title}>Registrar Execução</Text>
           <Text style={localStyles.subtitle}>{task.title}</Text>
-          {(task.target_weight ||
-            task.target_repetitions ||
-            task.target_sets) && (
-            <View style={localStyles.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={localStyles.label}>Peso (kg)</Text>
-                <TextInput
-                  style={localStyles.input}
-                  keyboardType="numeric"
-                  placeholder="Ex: 50"
-                  value={weight}
-                  onChangeText={setWeight}
-                />
+
+          {/* BOOLEAN */}
+          {isBoolean ? (
+            <View style={localStyles.infoBox}>
+              <Text style={localStyles.infoTitle}>Concluir tarefa</Text>
+              <Text style={localStyles.infoText}>
+                Confirme a execução desta tarefa para receber {task.xp_base} XP.
+              </Text>
+            </View>
+          ) : null}
+
+          {/* QUANTITY */}
+          {isQuantity ? (
+            <View>
+              <Text style={localStyles.label}>Quantidade{unit}</Text>
+              <TextInput
+                style={localStyles.input}
+                keyboardType="numeric"
+                placeholder={`Ex: ${task.target_value ?? 10}`}
+                value={executedValue}
+                onChangeText={setExecutedValue}
+              />
+
+              {task.target_value !== undefined ? (
+                <Text style={localStyles.hint}>
+                  Meta: {task.target_value}
+                  {unit}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {/* PROGRESS */}
+          {isProgress ? (
+            <View>
+              <Text style={localStyles.label}>Registrar progresso</Text>
+
+              <View style={localStyles.modeRow}>
+                <TouchableOpacity
+                  style={[
+                    localStyles.modeButton,
+                    progressMode === "INCREMENT" &&
+                      localStyles.modeButtonActive,
+                  ]}
+                  onPress={() => setProgressMode("INCREMENT")}
+                >
+                  <Text
+                    style={[
+                      localStyles.modeText,
+                      progressMode === "INCREMENT" &&
+                        localStyles.modeTextActive,
+                    ]}
+                  >
+                    Adicionar
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    localStyles.modeButton,
+                    progressMode === "ABSOLUTE" && localStyles.modeButtonActive,
+                  ]}
+                  onPress={() => setProgressMode("ABSOLUTE")}
+                >
+                  <Text
+                    style={[
+                      localStyles.modeText,
+                      progressMode === "ABSOLUTE" && localStyles.modeTextActive,
+                    ]}
+                  >
+                    Informar total
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={localStyles.label}>Repetições</Text>
-                <TextInput
-                  style={localStyles.input}
-                  keyboardType="numeric"
-                  placeholder="Ex: 12"
-                  value={reps}
-                  onChangeText={setReps}
-                />
+
+              <Text style={localStyles.modeDescription}>
+                {progressMode === "INCREMENT"
+                  ? "O valor será somado ao progresso atual."
+                  : "O valor informado será o seu progresso atual."}
+              </Text>
+
+              <Text style={localStyles.label}>
+                {progressMode === "INCREMENT"
+                  ? `Quanto você executou${unit}`
+                  : `Progresso atual${unit}`}
+              </Text>
+
+              <TextInput
+                style={localStyles.input}
+                keyboardType="numeric"
+                placeholder={
+                  progressMode === "INCREMENT"
+                    ? "Ex: 10"
+                    : `Ex: ${task.current_progress ?? 0}`
+                }
+                value={
+                  progressMode === "INCREMENT" ? executedValue : currentProgress
+                }
+                onChangeText={
+                  progressMode === "INCREMENT"
+                    ? setExecutedValue
+                    : setCurrentProgress
+                }
+              />
+
+              {task.target_value !== undefined ? (
+                <Text style={localStyles.hint}>
+                  Progresso: {task.current_progress ?? 0} / {task.target_value}
+                  {unit}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {/* EXERCISE */}
+          {isExercise ? (
+            <View>
+              <View style={localStyles.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={localStyles.label}>Peso (kg)</Text>
+                  <TextInput
+                    style={localStyles.input}
+                    keyboardType="numeric"
+                    placeholder={`Ex: ${task.target_weight ?? 10}`}
+                    value={weight}
+                    onChangeText={setWeight}
+                  />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={localStyles.label}>Repetições</Text>
+                  <TextInput
+                    style={localStyles.input}
+                    keyboardType="numeric"
+                    placeholder={`Ex: ${task.target_repetitions ?? 12}`}
+                    value={reps}
+                    onChangeText={setReps}
+                  />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={localStyles.label}>Séries</Text>
+                  <TextInput
+                    style={localStyles.input}
+                    keyboardType="numeric"
+                    placeholder={`Ex: ${task.target_sets ?? 3}`}
+                    value={series}
+                    onChangeText={setSeries}
+                  />
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={localStyles.label}>Series</Text>
-                <TextInput
-                  style={localStyles.input}
-                  keyboardType="numeric"
-                  placeholder="Ex: 3"
-                  value={series}
-                  onChangeText={setSeries}
-                />
+
+              <View style={localStyles.targetBox}>
+                <Text style={localStyles.targetText}>
+                  Meta: {task.target_weight ? `${task.target_weight}kg` : "-"} •{" "}
+                  {task.target_repetitions
+                    ? `${task.target_repetitions} reps`
+                    : "-"}{" "}
+                  • {task.target_sets ? `${task.target_sets} séries` : "-"}
+                </Text>
               </View>
             </View>
-          )}
+          ) : null}
 
-          <View style={localStyles.row}>
-            {task.target_distance && (
-              <View style={{ flex: 1 }}>
-                <Text style={localStyles.label}>Distância (km)</Text>
-                <TextInput
-                  style={localStyles.input}
-                  keyboardType="numeric"
-                  placeholder="Ex: 5"
-                  value={distance}
-                  onChangeText={setDistance}
-                />
-              </View>
-            )}
-            {task.target_duration_min && (
-              <View style={{ flex: 1 }}>
-                <Text style={localStyles.label}>Duração (min)</Text>
-                <TextInput
-                  style={localStyles.input}
-                  keyboardType="numeric"
-                  placeholder="Ex: 30"
-                  value={duration}
-                  onChangeText={setDuration}
-                />
-              </View>
-            )}
-            {task.current_progress !== undefined && (
-              <View style={{ flex: 1 }}>
-                <Text style={localStyles.label}>Progresso</Text>
-                <TextInput
-                  style={localStyles.input}
-                  keyboardType="numeric"
-                  placeholder="Ex: 30"
-                  value={currentProgress}
-                  onChangeText={setCurrentProgress}
-                />
-              </View>
-            )}
-          </View>
+          {/* COMPOSITE */}
+          {isComposite ? (
+            <View>
+              <Text style={localStyles.label}>Valor executado{unit}</Text>
+              <TextInput
+                style={localStyles.input}
+                keyboardType="numeric"
+                placeholder={`Ex: ${task.target_value ?? 1}`}
+                value={executedValue}
+                onChangeText={setExecutedValue}
+              />
+
+              {task.target_value !== undefined ? (
+                <Text style={localStyles.hint}>
+                  Meta: {task.target_value}
+                  {unit}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
 
           <View style={localStyles.actions}>
             <TouchableOpacity
@@ -141,28 +281,20 @@ export function RegisterLogModal({
 
             <TouchableOpacity
               style={[localStyles.btnSubmit, loading && { opacity: 0.7 }]}
-              onPress={() => {
-                onSubmit({
-                  executedWeight: weight ? Number(weight) : undefined,
-                  executedRepetitions: reps ? Number(reps) : undefined,
-                  executedDistanceKm: distance ? Number(distance) : undefined,
-                  executedDurationMin: duration ? Number(duration) : undefined,
-                  executedSets: series ? Number(series) : undefined,
-                  currentProgress: currentProgress
-                    ? Number(currentProgress)
-                    : undefined,
-                });
-                setWeight("");
-                setReps("");
-                setDistance("");
-                setDuration("");
-                setSeries("");
-                setCurrentProgress("");
-              }}
+              onPress={handleSubmit}
               disabled={loading}
             >
-              <Text style={{ color: "#fff", fontWeight: "600" }}>
-                {loading ? "Salvando..." : "Concluir & Ganhar XP"}
+              <Text
+                style={{
+                  color: "#fff",
+                  fontWeight: "600",
+                }}
+              >
+                {loading
+                  ? "Salvando..."
+                  : isBoolean
+                    ? "Concluir & Ganhar XP"
+                    : "Registrar & Ganhar XP"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -184,8 +316,16 @@ const localStyles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
-  title: { fontSize: 18, fontWeight: "700", marginBottom: 4 },
-  subtitle: { fontSize: 14, opacity: 0.6, marginBottom: 16 },
+  title: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    opacity: 0.6,
+    marginBottom: 16,
+  },
   label: {
     fontSize: 11,
     fontWeight: "600",
@@ -201,8 +341,75 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 14,
   },
-  row: { flexDirection: "row", gap: 12 },
-  actions: { flexDirection: "row", gap: 12, marginTop: 24 },
+  row: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  infoBox: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "#f5f5f5",
+    marginBottom: 8,
+  },
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  infoText: {
+    fontSize: 13,
+    opacity: 0.65,
+    lineHeight: 19,
+  },
+  hint: {
+    fontSize: 11,
+    opacity: 0.6,
+    marginTop: 6,
+  },
+  targetBox: {
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "#f5f5f5",
+  },
+  targetText: {
+    fontSize: 11,
+    opacity: 0.65,
+  },
+  modeRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  modeButton: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modeButtonActive: {
+    backgroundColor: "#000",
+    borderColor: "#000",
+  },
+  modeText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  modeTextActive: {
+    color: "#fff",
+  },
+  modeDescription: {
+    fontSize: 11,
+    opacity: 0.55,
+    marginTop: 6,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 24,
+  },
   btnCancel: {
     flex: 1,
     height: 44,

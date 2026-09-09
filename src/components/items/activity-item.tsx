@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { Feather } from "@expo/vector-icons"; // 👈 Importação dos ícones
+import { Feather } from "@expo/vector-icons";
 import type { ComponentStyles } from "@/constants/component-styles";
 import { EditActivityModal } from "@/components/modals/edit-activity-modal";
 import { AddTaskModal } from "@/components/modals/add-task-modal";
+import { ConfirmationModal } from "@/components/modals/confirmation-modal";
 import { TaskItem } from "@/components/items/task-item";
-import { updateActivity } from "@/services/activities.repository";
-import { createTask } from "@/services/tasks.repository";
-import { createActivityLog } from "@/services/activity-logs.repository";
+import {
+  updateActivity,
+  deleteActivity,
+} from "@/repositories/activities.repository";
+import { createTask } from "@/repositories/tasks.repository";
 import { Activity } from "../types/activity.types";
+import { GoalType, Periodicity, TaskType } from "../types/task.types";
 
 type ActivityItemProps = {
   activity: Activity;
@@ -27,44 +31,46 @@ export function ActivityItem({
 }: ActivityItemProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [loading, setLoading] = useState(false);
 
   async function handleSaveTask(taskData: {
     title: string;
     description: string;
-    type: "BOOLEAN" | "PROGRESSIVE" | "FINITE";
-    xpReward: number;
-    frequence?: number;
-    targetWeight?: number;
-    targetRepetitions?: number;
-    targetSets?: number;
-    targetDistanceKm?: number;
-    targetDurationMin?: number;
+    type: TaskType;
+    goalType: GoalType;
+    periodicity?: Periodicity;
+    xpBase: number;
     targetValue?: number;
     unitOfMeasurement?: string;
     currentProgress?: number;
+    targetWeight?: number;
+    targetRepetitions?: number;
+    targetSets?: number;
   }) {
     setLoading(true);
+
     try {
       await createTask({
         activityId: activity.id,
         title: taskData.title,
         description: taskData.description,
         type: taskData.type,
-        xpReward: taskData.xpReward,
-        frequence: taskData.frequence,
-        targetWeight: taskData.targetWeight,
-        targetRepetitions: taskData.targetRepetitions,
-        targetDistanceKm: taskData.targetDistanceKm,
-        targetDurationMin: taskData.targetDurationMin,
+        goalType: taskData.goalType,
+        periodicity: taskData.periodicity,
+        xpBase: taskData.xpBase,
         targetValue: taskData.targetValue,
         unitOfMeasurement: taskData.unitOfMeasurement,
         currentProgress: taskData.currentProgress,
+        targetWeight: taskData.targetWeight,
+        targetRepetitions: taskData.targetRepetitions,
+        targetSets: taskData.targetSets,
         metadata: {},
       });
+
       setIsAddTaskModalOpen(false);
-      if (onRefresh) onRefresh();
+      onRefresh?.();
     } catch (error) {
       console.error("Erro ao criar tarefa:", error);
     } finally {
@@ -76,12 +82,31 @@ export function ActivityItem({
     if (!name.trim()) return;
 
     setLoading(true);
+
     try {
-      await updateActivity({ id, name: name.trim() });
+      await updateActivity({
+        id,
+        name: name.trim(),
+      });
+
       setIsEditModalOpen(false);
-      if (onRefresh) onRefresh();
+      onRefresh?.();
     } catch (error) {
       console.error("Erro ao atualizar atividade:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDeleteActivity() {
+    setLoading(true);
+
+    try {
+      await deleteActivity(activity.id);
+      setIsDeleteModalOpen(false);
+      onRefresh?.();
+    } catch (error) {
+      console.error("Erro ao excluir atividade:", error);
     } finally {
       setLoading(false);
     }
@@ -103,18 +128,33 @@ export function ActivityItem({
           <Text style={styles.activityDesc}>{activity.desc}</Text>
         </TouchableOpacity>
 
-        {/* Grupo de Ações com Ícones Reais */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
           <TouchableOpacity
             style={{ padding: 8 }}
             onPress={() => setIsAddTaskModalOpen(true)}
+            disabled={loading}
           >
             <Feather name="plus-circle" size={18} color={theme.ink} />
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={{ padding: 8 }}
+            onPress={() => setIsDeleteModalOpen(true)}
+            disabled={loading}
+          >
+            <Feather name="trash-2" size={18} color={theme.ink} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={{ padding: 8, marginRight: 2 }}
             onPress={() => setIsExpanded((current) => !current)}
+            disabled={loading}
           >
             <Feather
               name={isExpanded ? "chevron-down" : "chevron-right"}
@@ -125,7 +165,6 @@ export function ActivityItem({
         </View>
       </View>
 
-      {/* Renderização condicional da listagem de Tasks vinculadas */}
       {isExpanded && activity.tasks && activity.tasks.length > 0 && (
         <View style={{ paddingLeft: 12, paddingBottom: 8 }}>
           {activity.tasks.map((task) => (
@@ -158,6 +197,18 @@ export function ActivityItem({
         loading={loading}
         onClose={() => setIsAddTaskModalOpen(false)}
         onSave={handleSaveTask}
+      />
+
+      <ConfirmationModal
+        visible={isDeleteModalOpen}
+        title="Excluir atividade?"
+        message={`A atividade "${activity.name}" será excluída permanentemente, junto com todas as tarefas e históricos de execução associados.`}
+        theme={theme}
+        loading={loading}
+        icon="trash-2"
+        confirmText="Excluir"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteActivity}
       />
     </>
   );

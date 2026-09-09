@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import type { ComponentStyles } from "@/constants/component-styles";
 import { RegisterLogModal } from "@/components/modals/register-log-modal";
-import { registerActivityLog } from "@/services/activity-logs.repository";
-import { Task } from "../types/task.types";
-import { Feather } from "@expo/vector-icons";
+import { ConfirmationModal } from "@/components/modals/confirmation-modal";
+import { registerTaskLog } from "@/repositories/task-logs.repository";
+import { deleteTask } from "@/repositories/tasks.repository";
+import {
+  Task,
+  TASK_TYPES,
+  GOAL_TYPES,
+  PERIODICITIES,
+} from "../types/task.types";
 import { getColorByPercentage } from "@/utils/color.utils";
 
 type TaskItemProps = {
@@ -14,73 +21,83 @@ type TaskItemProps = {
   onRefresh?: () => void;
 };
 
-// Helper para definir o ícone e o texto da tag baseado no tipo da task
-function getTaskTypeDetails(type: Task["type"]) {
-  switch (type) {
-    case "PROGRESSIVE":
-      return { icon: "📈", label: "Progressivo", badgeColor: "#3b82f6" }; // Azul
-    case "FINITE":
-      return { icon: "⏱️", label: "Tempo", badgeColor: "#10b981" }; // Verde
-    case "BOOLEAN":
-    default:
-      return { icon: "🔄", label: "Check", badgeColor: "#8b5cf6" }; // Roxo
-  }
-}
+const TASK_TYPE_DETAILS: Record<
+  Task["type"],
+  { icon: keyof typeof Feather.glyphMap; label: string }
+> = {
+  [TASK_TYPES.BOOLEAN]: { icon: "check-circle", label: "Check" },
+  [TASK_TYPES.QUANTITY]: { icon: "hash", label: "Quantidade" },
+  [TASK_TYPES.PROGRESS]: { icon: "trending-up", label: "Progresso" },
+  [TASK_TYPES.EXERCISE]: { icon: "activity", label: "Exercício" },
+  [TASK_TYPES.COMPOSITE]: { icon: "layers", label: "Composta" },
+};
 
-// Helper simples para formatar a data do último log (Ex: "Há 2 dias" ou data legível)
 function formatLastUpdate(dateString?: string) {
   if (!dateString) return "Nenhuma execução";
+
   const date = new Date(dateString);
-  return `Últ. alt.: ${date.toLocaleDateString()} às ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+
+  return `Últ. alt.: ${date.toLocaleDateString()} às ${date.toLocaleTimeString(
+    [],
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+  )}`;
+}
+
+function getPeriodicityLabel(periodicity?: Task["periodicity"]) {
+  switch (periodicity) {
+    case PERIODICITIES.DAILY:
+      return "Diário";
+    case PERIODICITIES.WEEKLY:
+      return "Semanal";
+    case PERIODICITIES.MONTHLY:
+      return "Mensal";
+    case PERIODICITIES.YEARLY:
+      return "Anual";
+    default:
+      return null;
+  }
 }
 
 export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const taskDetails = getTaskTypeDetails(task.type);
-  console.log("TaskItem renderizado com task:", task);
-  // Validação e cálculo para a barra de progresso de tarefas finitas
-  const isFiniteWithTarget =
-    task.type === "FINITE" &&
-    task.target_value !== undefined &&
-    task.target_value > 0;
+  const taskDetails = TASK_TYPE_DETAILS[task.type];
+  const latestLog = task.task_logs?.[0];
 
   const currentProg = task.current_progress ?? 0;
-  const targetVal = task.target_value ?? 1;
+  const targetVal = task.target_value ?? 0;
   const unit = task.unit_of_measurement ?? "";
-  const progressPercentage = isFiniteWithTarget
+
+  const isProgressTask = task.type === TASK_TYPES.PROGRESS && targetVal > 0;
+
+  const progressPercentage = isProgressTask
     ? Math.min(Math.round((currentProg / targetVal) * 100), 100)
     : 0;
 
-  // Informações extras para tarefas progressivas
-  const progressiveDetails =
-    task.type === "PROGRESSIVE"
+  const exerciseTargetDetails =
+    task.type === TASK_TYPES.EXERCISE
       ? [
           task.target_weight ? `${task.target_weight}kg` : null,
           task.target_repetitions ? `${task.target_repetitions} reps` : null,
-          task.target_distance_km ? `${task.target_distance_km} km` : null,
-          task.target_duration_min ? `${task.target_duration_min} min` : null,
+          task.target_sets ? `${task.target_sets} séries` : null,
         ]
           .filter(Boolean)
           .join(" • ")
       : null;
 
-  const currentProgressDetails =
-    task.type === "PROGRESSIVE" && task?.task_logs?.length
+  const exerciseCurrentDetails =
+    task.type === TASK_TYPES.EXERCISE && latestLog
       ? [
-          task?.task_logs?.[0]?.executed_weight
-            ? `${task.task_logs[0].executed_weight}kg`
+          latestLog.executed_weight ? `${latestLog.executed_weight}kg` : null,
+          latestLog.executed_repetitions
+            ? `${latestLog.executed_repetitions} reps`
             : null,
-          task?.task_logs?.[0]?.executed_repetitions
-            ? `${task.task_logs[0].executed_repetitions} reps`
-            : null,
-          task?.task_logs?.[0]?.executed_distance_km
-            ? `${task.task_logs[0].executed_distance_km} km`
-            : null,
-          task?.task_logs?.[0]?.executed_duration_min
-            ? `${task.task_logs[0].executed_duration_min} min`
-            : null,
+          latestLog.executed_sets ? `${latestLog.executed_sets} séries` : null,
         ]
           .filter(Boolean)
           .join(" • ")
@@ -89,31 +106,48 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   async function handleRegisterLog(metrics: {
     executedWeight?: number;
     executedRepetitions?: number;
-    executedDistanceKm?: number;
-    executedDurationMin?: number;
     executedSets?: number;
+    executedValue?: number;
     currentProgress?: number;
+    progressMode?: "INCREMENT" | "ABSOLUTE";
   }) {
     setLoading(true);
+
     try {
-      await registerActivityLog({
+      await registerTaskLog({
         taskId: task.id,
         executedWeight: metrics.executedWeight,
         executedRepetitions: metrics.executedRepetitions,
-        executedDistanceKm: metrics.executedDistanceKm,
-        executedDurationMin: metrics.executedDurationMin,
         executedSets: metrics.executedSets,
+        executedValue: metrics.executedValue,
         currentProgress: metrics.currentProgress,
+        progressMode: metrics.progressMode,
       });
 
       setIsLogModalOpen(false);
-      if (onRefresh) onRefresh();
+      onRefresh?.();
     } catch (error) {
       console.error("Erro ao registrar log da task:", error);
     } finally {
       setLoading(false);
     }
   }
+
+  async function handleDeleteTask() {
+    setLoading(true);
+
+    try {
+      await deleteTask(task.id);
+      setIsDeleteModalOpen(false);
+      onRefresh?.();
+    } catch (error) {
+      console.error("Erro ao excluir tarefa:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const periodicityLabel = getPeriodicityLabel(task.periodicity);
 
   return (
     <>
@@ -132,7 +166,6 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
         <View style={{ flex: 1, paddingRight: 8 }}>
           <View
             style={{
-              flex: 1,
               flexDirection: "row",
               justifyContent: "space-between",
               paddingRight: 8,
@@ -143,11 +176,13 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 6,
-                marginBottom: 2,
+                flex: 1,
+                paddingRight: 8,
               }}
             >
-              <Text style={styles.taskName}>
-                {taskDetails.icon} {task.title}
+              <Feather name={taskDetails.icon} size={15} color={theme.ink} />
+              <Text style={styles.taskName} numberOfLines={1}>
+                {task.title}
               </Text>
             </View>
 
@@ -171,28 +206,47 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                   borderColor: theme.inkSoft,
                 }}
               />
-              <Text style={styles.taskTag}>+{task.xp_reward} XP</Text>
+
+              <Text style={styles.taskTag}>+{task.xp_base} XP</Text>
+
               <TouchableOpacity
                 style={[
                   styles.buttonOutline,
                   {
                     paddingVertical: 6,
-                    paddingHorizontal: 12,
+                    paddingHorizontal: 8,
                     borderColor: theme.hairline,
                   },
                 ]}
                 onPress={() => setIsLogModalOpen(true)}
+                disabled={loading}
               >
                 <Feather name="zap" size={18} color={theme.yellow} />
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.buttonOutline,
+                  {
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    borderColor: theme.hairline,
+                  },
+                ]}
+                onPress={() => setIsDeleteModalOpen(true)}
+                disabled={loading}
+              >
+                <Feather name="trash-2" size={16} color={theme.ink} />
+              </TouchableOpacity>
             </View>
           </View>
+
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              marginBottom: isFiniteWithTarget ? 6 : 0,
+              marginBottom: isProgressTask ? 6 : 0,
             }}
           >
             {task.description ? (
@@ -200,8 +254,30 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
             ) : null}
           </View>
 
-          {/* Se for progressiva, exibe os valores das métricas */}
-          {task.type === "PROGRESSIVE" && progressiveDetails ? (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 4,
+            }}
+          >
+            <Text style={styles.infoDesc}>{taskDetails.label}</Text>
+
+            {task.goal_type === GOAL_TYPES.HABIT && periodicityLabel ? (
+              <Text style={styles.infoDesc}>• {periodicityLabel}</Text>
+            ) : task.goal_type === GOAL_TYPES.FINITE ? (
+              <Text style={styles.infoDesc}>• Finita</Text>
+            ) : null}
+          </View>
+
+          {task.type === TASK_TYPES.QUANTITY && task.unit_of_measurement ? (
+            <Text style={styles.infoDesc}>
+              Unidade: {task.unit_of_measurement}
+            </Text>
+          ) : null}
+
+          {task.type === TASK_TYPES.EXERCISE && exerciseTargetDetails ? (
             <View
               style={{
                 flexDirection: "row",
@@ -219,28 +295,30 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                     marginBottom: 4,
                   }}
                 >
-                  Metas: {progressiveDetails}
+                  Meta: {exerciseTargetDetails}
                 </Text>
-                <Text
-                  style={{
-                    fontSize: 11,
-                    color: theme.ink,
-                    opacity: 0.7,
-                    marginBottom: 4,
-                  }}
-                >
-                  Ult.: {currentProgressDetails}
-                </Text>
+
+                {exerciseCurrentDetails ? (
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: theme.ink,
+                      opacity: 0.7,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Últ.: {exerciseCurrentDetails}
+                  </Text>
+                ) : null}
               </View>
-              {/* Informação da última alteração baseada no último task_log */}
+
               <Text style={styles.infoDesc}>
-                {formatLastUpdate(task.task_logs?.[0]?.created_at)}
+                {formatLastUpdate(latestLog?.created_at)}
               </Text>
             </View>
           ) : null}
 
-          {/* Barra de progresso para FINITE com target_value */}
-          {isFiniteWithTarget ? (
+          {isProgressTask ? (
             <View style={{ marginTop: 2 }}>
               <View
                 style={{
@@ -250,14 +328,20 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                 }}
               >
                 <Text style={styles.infoDesc}>
-                  Prog: {currentProg} / {targetVal} ({unit})
+                  Prog: {currentProg} / {targetVal} {unit}
                 </Text>
+
                 <Text
-                  style={{ fontSize: 10, fontWeight: "700", color: theme.ink }}
+                  style={{
+                    fontSize: 10,
+                    fontWeight: "700",
+                    color: theme.ink,
+                  }}
                 >
                   {progressPercentage}%
                 </Text>
               </View>
+
               <View
                 style={{
                   height: 4,
@@ -274,6 +358,12 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                   }}
                 />
               </View>
+
+              {latestLog ? (
+                <Text style={styles.infoDesc}>
+                  {formatLastUpdate(latestLog.created_at)}
+                </Text>
+              ) : null}
             </View>
           ) : null}
         </View>
@@ -286,6 +376,18 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
         loading={loading}
         onClose={() => setIsLogModalOpen(false)}
         onSubmit={handleRegisterLog}
+      />
+
+      <ConfirmationModal
+        visible={isDeleteModalOpen}
+        title="Excluir tarefa?"
+        message={`A tarefa "${task.title}" será excluída permanentemente, junto com seu histórico de execuções.`}
+        theme={theme}
+        loading={loading}
+        icon="trash-2"
+        confirmText="Excluir"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteTask}
       />
     </>
   );
