@@ -1,21 +1,15 @@
+import type { AppColorPalette } from "@/constants/theme";
 import { useEffect, useState } from "react";
-import {
-  Modal,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import type { ComponentStyles } from "@/constants/component-styles";
-import { Task, TASK_TYPES, GOAL_TYPES } from "../types/task.types";
+import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Task, TASK_TYPES } from "../types/task.types";
+import { modalStyles } from "./modal-styles";
 
 type ProgressMode = "INCREMENT" | "ABSOLUTE";
 
 type RegisterLogModalProps = {
   visible: boolean;
   task: Task;
-  styles: ComponentStyles;
+  theme: AppColorPalette;
   loading?: boolean;
   onClose: () => void;
   onSubmit: (metrics: {
@@ -31,6 +25,7 @@ type RegisterLogModalProps = {
 export function RegisterLogModal({
   visible,
   task,
+  theme,
   loading,
   onClose,
   onSubmit,
@@ -81,16 +76,32 @@ export function RegisterLogModal({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={localStyles.overlay}>
-        <View style={[localStyles.content, { backgroundColor: "#fff" }]}>
-          <Text style={localStyles.title}>Registrar Execução</Text>
-          <Text style={localStyles.subtitle}>{task.title}</Text>
+      <View style={modalStyles.overlay}>
+        <View
+          style={[
+            modalStyles.content,
+            {
+              backgroundColor: theme.paper,
+              borderColor: theme.hairline,
+            },
+          ]}
+        >
+          <Text style={[modalStyles.title, { color: theme.ink }]}>
+            Registrar Execução
+          </Text>
+
+          <Text style={[modalStyles.subtitle, { color: theme.midGray }]}>
+            {task.title}
+          </Text>
 
           {/* BOOLEAN */}
           {isBoolean ? (
-            <View style={localStyles.infoBox}>
-              <Text style={localStyles.infoTitle}>Concluir tarefa</Text>
-              <Text style={localStyles.infoText}>
+            <View style={modalStyles.infoBox}>
+              <Text style={[modalStyles.infoTitle, { color: theme.ink }]}>
+                Concluir tarefa
+              </Text>
+
+              <Text style={[modalStyles.infoText, { color: theme.midGray }]}>
                 Confirme a execução desta tarefa para receber {task.xp_base} XP.
               </Text>
             </View>
@@ -99,17 +110,28 @@ export function RegisterLogModal({
           {/* QUANTITY */}
           {isQuantity ? (
             <View>
-              <Text style={localStyles.label}>Quantidade{unit}</Text>
+              <Text style={[modalStyles.label, { color: theme.midGray }]}>
+                Quantidade{unit}
+              </Text>
+
               <TextInput
-                style={localStyles.input}
+                style={[
+                  modalStyles.input,
+                  {
+                    backgroundColor: theme.canvas,
+                    color: theme.ink,
+                    borderColor: theme.hairline,
+                  },
+                ]}
                 keyboardType="numeric"
                 placeholder={`Ex: ${task.target_value ?? 10}`}
+                placeholderTextColor={theme.midGray}
                 value={executedValue}
                 onChangeText={setExecutedValue}
               />
 
               {task.target_value !== undefined ? (
-                <Text style={localStyles.hint}>
+                <Text style={[modalStyles.hint, { color: theme.midGray }]}>
                   Meta: {task.target_value}
                   {unit}
                 </Text>
@@ -120,22 +142,29 @@ export function RegisterLogModal({
           {/* PROGRESS */}
           {isProgress ? (
             <View>
-              <Text style={localStyles.label}>Registrar progresso</Text>
+              <Text style={[modalStyles.label, { color: theme.midGray }]}>
+                Registrar progresso
+              </Text>
 
-              <View style={localStyles.modeRow}>
+              <View style={modalStyles.modeRow}>
                 <TouchableOpacity
                   style={[
-                    localStyles.modeButton,
-                    progressMode === "INCREMENT" &&
-                      localStyles.modeButtonActive,
+                    modalStyles.modeButton,
+                    { borderColor: theme.hairline },
+                    progressMode === "INCREMENT" && {
+                      backgroundColor: theme.ink,
+                      borderColor: theme.ink,
+                    },
                   ]}
                   onPress={() => setProgressMode("INCREMENT")}
                 >
                   <Text
                     style={[
-                      localStyles.modeText,
-                      progressMode === "INCREMENT" &&
-                        localStyles.modeTextActive,
+                      modalStyles.modeText,
+                      { color: theme.ink },
+                      progressMode === "INCREMENT" && {
+                        color: theme.paper,
+                      },
                     ]}
                   >
                     Adicionar
@@ -144,15 +173,22 @@ export function RegisterLogModal({
 
                 <TouchableOpacity
                   style={[
-                    localStyles.modeButton,
-                    progressMode === "ABSOLUTE" && localStyles.modeButtonActive,
+                    modalStyles.modeButton,
+                    { borderColor: theme.hairline },
+                    progressMode === "ABSOLUTE" && {
+                      backgroundColor: theme.ink,
+                      borderColor: theme.ink,
+                    },
                   ]}
                   onPress={() => setProgressMode("ABSOLUTE")}
                 >
                   <Text
                     style={[
-                      localStyles.modeText,
-                      progressMode === "ABSOLUTE" && localStyles.modeTextActive,
+                      modalStyles.modeText,
+                      { color: theme.ink },
+                      progressMode === "ABSOLUTE" && {
+                        color: theme.paper,
+                      },
                     ]}
                   >
                     Informar total
@@ -160,26 +196,36 @@ export function RegisterLogModal({
                 </TouchableOpacity>
               </View>
 
-              <Text style={localStyles.modeDescription}>
+              <Text
+                style={[modalStyles.modeDescription, { color: theme.midGray }]}
+              >
                 {progressMode === "INCREMENT"
                   ? "O valor será somado ao progresso atual."
                   : "O valor informado será o seu progresso atual."}
               </Text>
 
-              <Text style={localStyles.label}>
+              <Text style={[modalStyles.label, { color: theme.midGray }]}>
                 {progressMode === "INCREMENT"
                   ? `Quanto você executou${unit}`
                   : `Progresso atual${unit}`}
               </Text>
 
               <TextInput
-                style={localStyles.input}
+                style={[
+                  modalStyles.input,
+                  {
+                    backgroundColor: theme.canvas,
+                    color: theme.ink,
+                    borderColor: theme.hairline,
+                  },
+                ]}
                 keyboardType="numeric"
                 placeholder={
                   progressMode === "INCREMENT"
                     ? "Ex: 10"
                     : `Ex: ${task.current_progress ?? 0}`
                 }
+                placeholderTextColor={theme.midGray}
                 value={
                   progressMode === "INCREMENT" ? executedValue : currentProgress
                 }
@@ -191,7 +237,7 @@ export function RegisterLogModal({
               />
 
               {task.target_value !== undefined ? (
-                <Text style={localStyles.hint}>
+                <Text style={[modalStyles.hint, { color: theme.midGray }]}>
                   Progresso: {task.current_progress ?? 0} / {task.target_value}
                   {unit}
                 </Text>
@@ -202,43 +248,83 @@ export function RegisterLogModal({
           {/* EXERCISE */}
           {isExercise ? (
             <View>
-              <View style={localStyles.row}>
+              <View style={modalStyles.row}>
                 <View style={{ flex: 1 }}>
-                  <Text style={localStyles.label}>Peso (kg)</Text>
+                  <Text style={[modalStyles.label, { color: theme.midGray }]}>
+                    Peso (kg)
+                  </Text>
+
                   <TextInput
-                    style={localStyles.input}
+                    style={[
+                      modalStyles.input,
+                      {
+                        backgroundColor: theme.canvas,
+                        color: theme.ink,
+                        borderColor: theme.hairline,
+                      },
+                    ]}
                     keyboardType="numeric"
                     placeholder={`Ex: ${task.target_weight ?? 10}`}
+                    placeholderTextColor={theme.midGray}
                     value={weight}
                     onChangeText={setWeight}
                   />
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <Text style={localStyles.label}>Repetições</Text>
+                  <Text style={[modalStyles.label, { color: theme.midGray }]}>
+                    Repetições
+                  </Text>
+
                   <TextInput
-                    style={localStyles.input}
+                    style={[
+                      modalStyles.input,
+                      {
+                        backgroundColor: theme.canvas,
+                        color: theme.ink,
+                        borderColor: theme.hairline,
+                      },
+                    ]}
                     keyboardType="numeric"
                     placeholder={`Ex: ${task.target_repetitions ?? 12}`}
+                    placeholderTextColor={theme.midGray}
                     value={reps}
                     onChangeText={setReps}
                   />
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <Text style={localStyles.label}>Séries</Text>
+                  <Text style={[modalStyles.label, { color: theme.midGray }]}>
+                    Séries
+                  </Text>
+
                   <TextInput
-                    style={localStyles.input}
+                    style={[
+                      modalStyles.input,
+                      {
+                        backgroundColor: theme.canvas,
+                        color: theme.ink,
+                        borderColor: theme.hairline,
+                      },
+                    ]}
                     keyboardType="numeric"
                     placeholder={`Ex: ${task.target_sets ?? 3}`}
+                    placeholderTextColor={theme.midGray}
                     value={series}
                     onChangeText={setSeries}
                   />
                 </View>
               </View>
 
-              <View style={localStyles.targetBox}>
-                <Text style={localStyles.targetText}>
+              <View
+                style={[
+                  modalStyles.targetBox,
+                  { backgroundColor: theme.canvas },
+                ]}
+              >
+                <Text
+                  style={[modalStyles.targetText, { color: theme.midGray }]}
+                >
                   Meta: {task.target_weight ? `${task.target_weight}kg` : "-"} •{" "}
                   {task.target_repetitions
                     ? `${task.target_repetitions} reps`
@@ -252,17 +338,28 @@ export function RegisterLogModal({
           {/* COMPOSITE */}
           {isComposite ? (
             <View>
-              <Text style={localStyles.label}>Valor executado{unit}</Text>
+              <Text style={[modalStyles.label, { color: theme.midGray }]}>
+                Valor executado{unit}
+              </Text>
+
               <TextInput
-                style={localStyles.input}
+                style={[
+                  modalStyles.input,
+                  {
+                    backgroundColor: theme.canvas,
+                    color: theme.ink,
+                    borderColor: theme.hairline,
+                  },
+                ]}
                 keyboardType="numeric"
                 placeholder={`Ex: ${task.target_value ?? 1}`}
+                placeholderTextColor={theme.midGray}
                 value={executedValue}
                 onChangeText={setExecutedValue}
               />
 
               {task.target_value !== undefined ? (
-                <Text style={localStyles.hint}>
+                <Text style={[modalStyles.hint, { color: theme.midGray }]}>
                   Meta: {task.target_value}
                   {unit}
                 </Text>
@@ -270,31 +367,33 @@ export function RegisterLogModal({
             </View>
           ) : null}
 
-          <View style={localStyles.actions}>
+          <View style={modalStyles.actions}>
             <TouchableOpacity
-              style={localStyles.btnCancel}
+              style={[
+                modalStyles.actionButton,
+                { backgroundColor: theme.canvas },
+              ]}
               onPress={onClose}
               disabled={loading}
             >
-              <Text>Cancelar</Text>
+              <Text style={{ color: theme.ink, fontWeight: "500" }}>
+                Cancelar
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[localStyles.btnSubmit, loading && { opacity: 0.7 }]}
+              style={[
+                modalStyles.actionButton,
+                {
+                  backgroundColor: theme.ink,
+                  opacity: loading ? 0.7 : 1,
+                },
+              ]}
               onPress={handleSubmit}
               disabled={loading}
             >
-              <Text
-                style={{
-                  color: "#fff",
-                  fontWeight: "600",
-                }}
-              >
-                {loading
-                  ? "Salvando..."
-                  : isBoolean
-                    ? "Concluir & Ganhar XP"
-                    : "Registrar & Ganhar XP"}
+              <Text style={{ color: theme.paper, fontWeight: "500" }}>
+                {loading ? "Salvando..." : isBoolean ? "Concluir" : "Registrar"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -303,127 +402,3 @@ export function RegisterLogModal({
     </Modal>
   );
 }
-
-const localStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  content: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    opacity: 0.6,
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    marginBottom: 6,
-    marginTop: 10,
-  },
-  input: {
-    height: 44,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    fontSize: 14,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  infoBox: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#f5f5f5",
-    marginBottom: 8,
-  },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  infoText: {
-    fontSize: 13,
-    opacity: 0.65,
-    lineHeight: 19,
-  },
-  hint: {
-    fontSize: 11,
-    opacity: 0.6,
-    marginTop: 6,
-  },
-  targetBox: {
-    marginTop: 12,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: "#f5f5f5",
-  },
-  targetText: {
-    fontSize: 11,
-    opacity: 0.65,
-  },
-  modeRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  modeButton: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modeButtonActive: {
-    backgroundColor: "#000",
-    borderColor: "#000",
-  },
-  modeText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  modeTextActive: {
-    color: "#fff",
-  },
-  modeDescription: {
-    fontSize: 11,
-    opacity: 0.55,
-    marginTop: 6,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 24,
-  },
-  btnCancel: {
-    flex: 1,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-  },
-  btnSubmit: {
-    flex: 1,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#000",
-  },
-});

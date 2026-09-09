@@ -2,7 +2,6 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
-/** Tokens de design compartilhados pela aplicação. */
 export const spacing = {
   4: 4, 8: 8, 12: 12, 16: 16, 20: 20, 24: 24, 48: 48,
 } as const;
@@ -79,7 +78,6 @@ export const Fonts = Platform.select({
   },
 });
 
-/** Espaçamentos legados do template, mantidos durante a migração. */
 export const Spacing = {
   half: 2, one: 4, two: 8, three: 16, four: 24, five: 32, six: 64,
 } as const;

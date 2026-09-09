@@ -1,6 +1,7 @@
-import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { modalStyles as styles } from "@/components/modals/modal-styles";
 import type { AppColorPalette } from "@/constants/theme";
+import Feather from "@expo/vector-icons/build/Feather";
+import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Category } from "../types/category.type";
 
 type AddActivityModalProps = {
@@ -79,14 +80,27 @@ export function AddActivityModal({
                   ]}
                   onPress={() => onCategoryChange(category.id)}
                 >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      { color: selected ? theme.paper : theme.ink },
-                    ]}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
                   >
-                    {category.icon} {category.name}
-                  </Text>
+                    <Feather
+                      name={category.icon as keyof typeof Feather.glyphMap}
+                      size={18}
+                      color={selected ? theme.paper : theme.ink}
+                    />
+                    <Text
+                      style={[
+                        styles.optionText,
+                        { color: selected ? theme.paper : theme.ink },
+                      ]}
+                    >
+                      {category.name}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}

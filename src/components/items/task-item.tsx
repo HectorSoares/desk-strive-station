@@ -1,18 +1,18 @@
-import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import type { ComponentStyles } from "@/constants/component-styles";
-import { RegisterLogModal } from "@/components/modals/register-log-modal";
 import { ConfirmationModal } from "@/components/modals/confirmation-modal";
+import { RegisterLogModal } from "@/components/modals/register-log-modal";
+import type { ComponentStyles } from "@/constants/component-styles";
 import { registerTaskLog } from "@/repositories/task-logs.repository";
 import { deleteTask } from "@/repositories/tasks.repository";
+import { getColorByPercentage } from "@/utils/color.utils";
+import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import {
-  Task,
-  TASK_TYPES,
   GOAL_TYPES,
   PERIODICITIES,
+  Task,
+  TASK_TYPES,
 } from "../types/task.types";
-import { getColorByPercentage } from "@/utils/color.utils";
 
 type TaskItemProps = {
   task: Task;
@@ -372,7 +372,7 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
       <RegisterLogModal
         visible={isLogModalOpen}
         task={task}
-        styles={styles}
+        theme={theme}
         loading={loading}
         onClose={() => setIsLogModalOpen(false)}
         onSubmit={handleRegisterLog}
