@@ -1,12 +1,12 @@
-import { ConfirmationModal } from "@/components/modals/confirmation-modal";
 import { RegisterLogModal } from "@/components/modals/register-log-modal";
+import { SwipeToDelete } from "@/components/ui/swipe-to-delete";
 import type { ComponentStyles } from "@/constants/component-styles";
 import { registerTaskLog } from "@/repositories/task-logs.repository";
 import { deleteTask } from "@/repositories/tasks.repository";
 import { getColorByPercentage } from "@/utils/color.utils";
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import {
   GOAL_TYPES,
   PERIODICITIES,
@@ -63,7 +63,6 @@ function getPeriodicityLabel(periodicity?: Task["periodicity"]) {
 
 export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const taskDetails = TASK_TYPE_DETAILS[task.type];
@@ -134,171 +133,158 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   }
 
   async function handleDeleteTask() {
-    setLoading(true);
-
-    try {
-      await deleteTask(task.id);
-      setIsDeleteModalOpen(false);
-      onRefresh?.();
-    } catch (error) {
-      console.error("Erro ao excluir tarefa:", error);
-    } finally {
-      setLoading(false);
-    }
+    await deleteTask(task.id);
+    onRefresh?.();
   }
 
   const periodicityLabel = getPeriodicityLabel(task.periodicity);
 
   return (
     <>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingVertical: 10,
-          paddingLeft: 16,
-          paddingRight: 8,
-          borderTopWidth: 1,
-          borderTopColor: theme.hairline,
-        }}
+      <SwipeToDelete
+        theme={theme}
+        title="Excluir tarefa?"
+        message={`A tarefa "${task.title}" será excluída permanentemente, junto com seu histórico de execuções.`}
+        onDelete={handleDeleteTask}
       >
-        <View style={{ flex: 1, paddingRight: 8 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              paddingRight: 8,
-            }}
-          >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: 10,
+            paddingLeft: 6,
+            paddingRight: 8,
+            backgroundColor: theme.background,
+          }}
+        >
+          <View style={{ flex: 1, paddingRight: 8 }}>
             <View
               style={{
                 flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                flex: 1,
+                justifyContent: "space-between",
                 paddingRight: 8,
-              }}
-            >
-              <Feather name={taskDetails.icon} size={15} color={theme.ink} />
-              <Text style={styles.taskName} numberOfLines={1}>
-                {task.title}
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
               }}
             >
               <View
                 style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 6,
-                  backgroundColor: getColorByPercentage(
-                    progressPercentage,
-                    theme.progressGradient,
-                  ),
-                  borderWidth: 1,
-                  borderColor: theme.inkSoft,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  flex: 1,
+                  paddingRight: 8,
                 }}
-              />
-
-              <Text style={styles.taskTag}>+{task.xp_base} XP</Text>
-
-              <TouchableOpacity
-                style={[
-                  styles.buttonOutline,
-                  {
-                    paddingVertical: 6,
-                    paddingHorizontal: 8,
-                    borderColor: theme.hairline,
-                  },
-                ]}
-                onPress={() => setIsLogModalOpen(true)}
-                disabled={loading}
               >
-                <Feather name="zap" size={18} color={theme.yellow} />
-              </TouchableOpacity>
+                <Feather name={taskDetails.icon} size={15} color={theme.ink} />
 
-              <TouchableOpacity
-                style={[
-                  styles.buttonOutline,
-                  {
-                    paddingVertical: 6,
-                    paddingHorizontal: 8,
-                    borderColor: theme.hairline,
-                  },
-                ]}
-                onPress={() => setIsDeleteModalOpen(true)}
-                disabled={loading}
+                <Text style={styles.taskName} numberOfLines={1}>
+                  {task.title}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                }}
               >
-                <Feather name="trash-2" size={16} color={theme.ink} />
-              </TouchableOpacity>
+                <View
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 6,
+                    backgroundColor: getColorByPercentage(
+                      progressPercentage,
+                      theme.progressGradient,
+                    ),
+                    borderWidth: 1,
+                    borderColor: theme.inkSoft,
+                  }}
+                />
+
+                <Text style={styles.taskTag}>+{task.xp_base} XP</Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.buttonOutline,
+                    {
+                      paddingVertical: 6,
+                      paddingHorizontal: 8,
+                      borderColor: theme.hairline,
+                    },
+                  ]}
+                  onPress={() => setIsLogModalOpen(true)}
+                  disabled={loading}
+                >
+                  <Feather name="zap" size={18} color={theme.yellow} />
+                </TouchableOpacity>
+
+                {Platform.OS === "web" && (
+                  <TouchableOpacity
+                    style={[
+                      styles.buttonOutline,
+                      {
+                        paddingVertical: 6,
+                        paddingHorizontal: 8,
+                        borderColor: theme.hairline,
+                      },
+                    ]}
+                    onPress={() => {}}
+                    disabled={loading}
+                  >
+                    <Feather name="trash-2" size={16} color={theme.ink} />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
-          </View>
 
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: isProgressTask ? 6 : 0,
-            }}
-          >
-            {task.description ? (
-              <Text style={styles.taskDesc}>{task.description}</Text>
-            ) : null}
-          </View>
-
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 4,
-            }}
-          >
-            <Text style={styles.infoDesc}>{taskDetails.label}</Text>
-
-            {task.goal_type === GOAL_TYPES.HABIT && periodicityLabel ? (
-              <Text style={styles.infoDesc}>• {periodicityLabel}</Text>
-            ) : task.goal_type === GOAL_TYPES.FINITE ? (
-              <Text style={styles.infoDesc}>• Finita</Text>
-            ) : null}
-          </View>
-
-          {task.type === TASK_TYPES.QUANTITY && task.unit_of_measurement ? (
-            <Text style={styles.infoDesc}>
-              Unidade: {task.unit_of_measurement}
-            </Text>
-          ) : null}
-
-          {task.type === TASK_TYPES.EXERCISE && exerciseTargetDetails ? (
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                gap: 12,
+                marginBottom: isProgressTask ? 6 : 0,
               }}
             >
-              <View>
-                <Text
-                  style={{
-                    fontSize: 11,
-                    color: theme.ink,
-                    opacity: 0.7,
-                    marginBottom: 4,
-                  }}
-                >
-                  Meta: {exerciseTargetDetails}
-                </Text>
+              {task.description ? (
+                <Text style={styles.taskDesc}>{task.description}</Text>
+              ) : null}
+            </View>
 
-                {exerciseCurrentDetails ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 4,
+              }}
+            >
+              <Text style={styles.infoDesc}>{taskDetails.label}</Text>
+
+              {task.goal_type === GOAL_TYPES.HABIT && periodicityLabel ? (
+                <Text style={styles.infoDesc}>• {periodicityLabel}</Text>
+              ) : task.goal_type === GOAL_TYPES.FINITE ? (
+                <Text style={styles.infoDesc}>• Finita</Text>
+              ) : null}
+            </View>
+
+            {task.type === TASK_TYPES.QUANTITY && task.unit_of_measurement ? (
+              <Text style={styles.infoDesc}>
+                Unidade: {task.unit_of_measurement}
+              </Text>
+            ) : null}
+
+            {task.type === TASK_TYPES.EXERCISE && exerciseTargetDetails ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                <View>
                   <Text
                     style={{
                       fontSize: 11,
@@ -307,67 +293,80 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                       marginBottom: 4,
                     }}
                   >
-                    Últ.: {exerciseCurrentDetails}
+                    Meta: {exerciseTargetDetails}
+                  </Text>
+
+                  {exerciseCurrentDetails ? (
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: theme.ink,
+                        opacity: 0.7,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Últ.: {exerciseCurrentDetails}
+                    </Text>
+                  ) : null}
+                </View>
+
+                <Text style={styles.infoDesc}>
+                  {formatLastUpdate(latestLog?.created_at)}
+                </Text>
+              </View>
+            ) : null}
+
+            {isProgressTask ? (
+              <View style={{ marginTop: 2 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginBottom: 2,
+                  }}
+                >
+                  <Text style={styles.infoDesc}>
+                    Prog: {currentProg} / {targetVal} {unit}
+                  </Text>
+
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "700",
+                      color: theme.ink,
+                    }}
+                  >
+                    {progressPercentage}%
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    height: 4,
+                    backgroundColor: theme.hairline,
+                    borderRadius: 2,
+                    overflow: "hidden",
+                  }}
+                >
+                  <View
+                    style={{
+                      height: "100%",
+                      width: `${progressPercentage}%`,
+                      backgroundColor: theme.ink,
+                    }}
+                  />
+                </View>
+
+                {latestLog ? (
+                  <Text style={styles.infoDesc}>
+                    {formatLastUpdate(latestLog.created_at)}
                   </Text>
                 ) : null}
               </View>
-
-              <Text style={styles.infoDesc}>
-                {formatLastUpdate(latestLog?.created_at)}
-              </Text>
-            </View>
-          ) : null}
-
-          {isProgressTask ? (
-            <View style={{ marginTop: 2 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginBottom: 2,
-                }}
-              >
-                <Text style={styles.infoDesc}>
-                  Prog: {currentProg} / {targetVal} {unit}
-                </Text>
-
-                <Text
-                  style={{
-                    fontSize: 10,
-                    fontWeight: "700",
-                    color: theme.ink,
-                  }}
-                >
-                  {progressPercentage}%
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  height: 4,
-                  backgroundColor: theme.hairline,
-                  borderRadius: 2,
-                  overflow: "hidden",
-                }}
-              >
-                <View
-                  style={{
-                    height: "100%",
-                    width: `${progressPercentage}%`,
-                    backgroundColor: theme.ink,
-                  }}
-                />
-              </View>
-
-              {latestLog ? (
-                <Text style={styles.infoDesc}>
-                  {formatLastUpdate(latestLog.created_at)}
-                </Text>
-              ) : null}
-            </View>
-          ) : null}
+            ) : null}
+          </View>
         </View>
-      </View>
+      </SwipeToDelete>
 
       <RegisterLogModal
         visible={isLogModalOpen}
@@ -376,18 +375,6 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
         loading={loading}
         onClose={() => setIsLogModalOpen(false)}
         onSubmit={handleRegisterLog}
-      />
-
-      <ConfirmationModal
-        visible={isDeleteModalOpen}
-        title="Excluir tarefa?"
-        message={`A tarefa "${task.title}" será excluída permanentemente, junto com seu histórico de execuções.`}
-        theme={theme}
-        loading={loading}
-        icon="trash-2"
-        confirmText="Excluir"
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDeleteTask}
       />
     </>
   );

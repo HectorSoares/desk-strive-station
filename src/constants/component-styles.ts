@@ -9,7 +9,7 @@ import { colors, radius, spacing, type AppColorPalette } from '@/constants/theme
 export function createComponentStyles(theme: AppColorPalette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: theme.canvas },
-    scrollContent: { padding: spacing[20], paddingBottom: 100 },
+    scrollContent: { padding: spacing[16], paddingBottom: 100 },
     headingSm: { fontSize: 24, fontWeight: '600', color: theme.ink, letterSpacing: -0.6 },
     textBodyLg: { fontSize: 16, fontWeight: '600', color: theme.ink },
     textMuted: { fontSize: 14, color: theme.midGray, marginBottom: spacing[8] },

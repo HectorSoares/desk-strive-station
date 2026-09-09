@@ -1,11 +1,11 @@
+import { EditCategoryModal } from "@/components/modals/edit-category-modal";
+import type { ComponentStyles } from "@/constants/component-styles";
+import { updateCategory } from "@/repositories/categories.repository";
+import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import type { ComponentStyles } from "@/constants/component-styles";
 import { ActivityItem } from "../items/activity-item";
 import { Category } from "../types/category.type";
-import { EditCategoryModal } from "@/components/modals/edit-category-modal";
-import { updateCategory } from "@/repositories/categories.repository";
 
 type CategoryCardProps = {
   category: Category;

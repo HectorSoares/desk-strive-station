@@ -1,16 +1,17 @@
-import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import type { ComponentStyles } from "@/constants/component-styles";
-import { EditActivityModal } from "@/components/modals/edit-activity-modal";
+import { TaskItem } from "@/components/items/task-item";
 import { AddTaskModal } from "@/components/modals/add-task-modal";
 import { ConfirmationModal } from "@/components/modals/confirmation-modal";
-import { TaskItem } from "@/components/items/task-item";
+import { EditActivityModal } from "@/components/modals/edit-activity-modal";
+import { SwipeToDelete } from "@/components/ui/swipe-to-delete";
+import type { ComponentStyles } from "@/constants/component-styles";
 import {
-  updateActivity,
   deleteActivity,
+  updateActivity,
 } from "@/repositories/activities.repository";
 import { createTask } from "@/repositories/tasks.repository";
+import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Activity } from "../types/activity.types";
 import { GoalType, Periodicity, TaskType } from "../types/task.types";
 
@@ -114,57 +115,72 @@ export function ActivityItem({
 
   return (
     <>
-      <View
-        style={[
-          styles.activityItem,
-          isLast && (!isExpanded || !activity.tasks?.length) && styles.noBorder,
-        ]}
+      <SwipeToDelete
+        theme={theme}
+        title="Excluir atividade?"
+        message={`A atividade "${activity.name}" será excluída permanentemente, junto com todas as tarefas e históricos de execução associados.`}
+        onDelete={handleDeleteActivity}
       >
-        <TouchableOpacity
-          style={[styles.activityInfo, { flex: 1 }]}
-          onPress={() => setIsEditModalOpen(true)}
-        >
-          <Text style={styles.activityName}>{activity.name}</Text>
-          <Text style={styles.activityDesc}>{activity.desc}</Text>
-        </TouchableOpacity>
-
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 2,
-          }}
+          style={[
+            styles.activityItem,
+            isLast &&
+              (!isExpanded || !activity.tasks?.length) &&
+              styles.noBorder,
+          ]}
         >
           <TouchableOpacity
-            style={{ padding: 8 }}
-            onPress={() => setIsAddTaskModalOpen(true)}
-            disabled={loading}
+            style={[styles.activityInfo, { flex: 1 }]}
+            onPress={() => setIsEditModalOpen(true)}
           >
-            <Feather name="plus-circle" size={18} color={theme.ink} />
+            <Text style={styles.activityName}>{activity.name}</Text>
+            <Text style={styles.activityDesc}>{activity.desc}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={{ padding: 8 }}
-            onPress={() => setIsDeleteModalOpen(true)}
-            disabled={loading}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 2,
+            }}
           >
-            <Feather name="trash-2" size={18} color={theme.ink} />
-          </TouchableOpacity>
+            {/* Botão de Adicionar Tarefa */}
+            <TouchableOpacity
+              style={{ padding: 8 }}
+              onPress={() => setIsAddTaskModalOpen(true)}
+              disabled={loading}
+            >
+              <Feather name="plus-circle" size={18} color={theme.ink} />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={{ padding: 8, marginRight: 2 }}
-            onPress={() => setIsExpanded((current) => !current)}
-            disabled={loading}
-          >
-            <Feather
-              name={isExpanded ? "chevron-down" : "chevron-right"}
-              size={18}
-              color={theme.ink}
-            />
-          </TouchableOpacity>
+            {/* Botão de Excluir visível apenas na Web (no mobile usa o Swipe) */}
+            {Platform.OS === "web" && (
+              <TouchableOpacity
+                style={{ padding: 8 }}
+                onPress={() => setIsDeleteModalOpen(true)}
+                disabled={loading}
+              >
+                <Feather name="trash-2" size={18} color={theme.ink} />
+              </TouchableOpacity>
+            )}
+
+            {/* Botão de Expandir / Recolher */}
+            <TouchableOpacity
+              style={{ padding: 8, marginRight: 2 }}
+              onPress={() => setIsExpanded((current) => !current)}
+              disabled={loading}
+            >
+              <Feather
+                name={isExpanded ? "chevron-down" : "chevron-right"}
+                size={18}
+                color={theme.ink}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </SwipeToDelete>
 
+      {/* Renderização das Tasks filhas */}
       {isExpanded && activity.tasks && activity.tasks.length > 0 && (
         <View style={{ paddingLeft: 12, paddingBottom: 8 }}>
           {activity.tasks.map((task) => (
@@ -179,11 +195,11 @@ export function ActivityItem({
         </View>
       )}
 
+      {/* Modais */}
       <EditActivityModal
         visible={isEditModalOpen}
         activity={activity}
         theme={theme}
-        styles={styles}
         loading={loading}
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveActivity}
