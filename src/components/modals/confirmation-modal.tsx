@@ -1,5 +1,5 @@
-import { Feather } from "@expo/vector-icons";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
+import { Icon, IconName } from "../ui/icon";
 
 type ConfirmationModalProps = {
   visible: boolean;
@@ -9,7 +9,7 @@ type ConfirmationModalProps = {
   loading?: boolean;
   confirmText?: string;
   cancelText?: string;
-  icon?: keyof typeof Feather.glyphMap;
+  icon?: IconName;
   onClose: () => void;
   onConfirm: () => void;
 };
@@ -64,7 +64,7 @@ export function ConfirmationModal({
               marginBottom: 16,
             }}
           >
-            <Feather name={icon} size={22} color={theme.ink} />
+            <Icon name={icon} size={22} color={theme.ink} />
           </View>
 
           <Text

@@ -1,7 +1,7 @@
 import { ConfirmationModal } from "@/components/modals/confirmation-modal";
-import { Feather } from "@expo/vector-icons";
 import { useRef, useState } from "react";
 import { Animated, PanResponder, Platform, View } from "react-native";
+import { Icon } from "./icon";
 
 type SwipeToDeleteProps = {
   children: React.ReactNode;
@@ -120,7 +120,7 @@ export function SwipeToDelete({
               transform: [{ scale: trashScale }],
             }}
           >
-            <Feather name="trash-2" size={22} color={theme.ink} />
+            <Icon name="trash-2" size={22} color={theme.ink} />
           </Animated.View>
         )}
 

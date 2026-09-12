@@ -94,7 +94,6 @@ export function RegisterLogModal({
             {task.title}
           </Text>
 
-          {/* BOOLEAN */}
           {isBoolean ? (
             <View style={modalStyles.infoBox}>
               <Text style={[modalStyles.infoTitle, { color: theme.ink }]}>
@@ -107,7 +106,6 @@ export function RegisterLogModal({
             </View>
           ) : null}
 
-          {/* QUANTITY */}
           {isQuantity ? (
             <View>
               <Text style={[modalStyles.label, { color: theme.midGray }]}>
@@ -139,7 +137,6 @@ export function RegisterLogModal({
             </View>
           ) : null}
 
-          {/* PROGRESS */}
           {isProgress ? (
             <View>
               <Text style={[modalStyles.label, { color: theme.midGray }]}>
@@ -245,7 +242,6 @@ export function RegisterLogModal({
             </View>
           ) : null}
 
-          {/* EXERCISE */}
           {isExercise ? (
             <View>
               <View style={modalStyles.row}>
@@ -335,7 +331,6 @@ export function RegisterLogModal({
             </View>
           ) : null}
 
-          {/* COMPOSITE */}
           {isComposite ? (
             <View>
               <Text style={[modalStyles.label, { color: theme.midGray }]}>

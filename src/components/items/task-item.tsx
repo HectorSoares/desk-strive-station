@@ -4,7 +4,6 @@ import type { ComponentStyles } from "@/constants/component-styles";
 import { registerTaskLog } from "@/repositories/task-logs.repository";
 import { deleteTask } from "@/repositories/tasks.repository";
 import { getColorByPercentage } from "@/utils/color.utils";
-import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 import {
@@ -13,6 +12,7 @@ import {
   Task,
   TASK_TYPES,
 } from "../types/task.types";
+import { Icon } from "../ui/icon";
 
 type TaskItemProps = {
   task: Task;
@@ -21,10 +21,7 @@ type TaskItemProps = {
   onRefresh?: () => void;
 };
 
-const TASK_TYPE_DETAILS: Record<
-  Task["type"],
-  { icon: keyof typeof Feather.glyphMap; label: string }
-> = {
+const TASK_TYPE_DETAILS: Record<Task["type"], { icon: any; label: string }> = {
   [TASK_TYPES.BOOLEAN]: { icon: "check-circle", label: "Check" },
   [TASK_TYPES.QUANTITY]: { icon: "hash", label: "Quantidade" },
   [TASK_TYPES.PROGRESS]: { icon: "trending-up", label: "Progresso" },
@@ -175,7 +172,7 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                   paddingRight: 8,
                 }}
               >
-                <Feather name={taskDetails.icon} size={15} color={theme.ink} />
+                <Icon name={taskDetails.icon} size={15} color={theme.ink} />
 
                 <Text style={styles.taskName} numberOfLines={1}>
                   {task.title}
@@ -217,7 +214,7 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                   onPress={() => setIsLogModalOpen(true)}
                   disabled={loading}
                 >
-                  <Feather name="zap" size={18} color={theme.yellow} />
+                  <Icon name="zap" size={14} color={theme.yellow} />
                 </TouchableOpacity>
 
                 {Platform.OS === "web" && (
@@ -233,7 +230,7 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                     onPress={() => {}}
                     disabled={loading}
                   >
-                    <Feather name="trash-2" size={16} color={theme.ink} />
+                    <Icon name="trash-2" size={14} color={theme.ink} />
                   </TouchableOpacity>
                 )}
               </View>

@@ -9,11 +9,11 @@ import {
   updateActivity,
 } from "@/repositories/activities.repository";
 import { createTask } from "@/repositories/tasks.repository";
-import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Activity } from "../types/activity.types";
 import { GoalType, Periodicity, TaskType } from "../types/task.types";
+import { Icon } from "../ui/icon";
 
 type ActivityItemProps = {
   activity: Activity;
@@ -134,7 +134,6 @@ export function ActivityItem({
             onPress={() => setIsEditModalOpen(true)}
           >
             <Text style={styles.activityName}>{activity.name}</Text>
-            <Text style={styles.activityDesc}>{activity.desc}</Text>
           </TouchableOpacity>
 
           <View
@@ -144,33 +143,30 @@ export function ActivityItem({
               gap: 2,
             }}
           >
-            {/* Botão de Adicionar Tarefa */}
             <TouchableOpacity
               style={{ padding: 8 }}
               onPress={() => setIsAddTaskModalOpen(true)}
               disabled={loading}
             >
-              <Feather name="plus-circle" size={18} color={theme.ink} />
+              <Icon name="plus-circle" size={16} color={theme.ink} />
             </TouchableOpacity>
 
-            {/* Botão de Excluir visível apenas na Web (no mobile usa o Swipe) */}
             {Platform.OS === "web" && (
               <TouchableOpacity
                 style={{ padding: 8 }}
                 onPress={() => setIsDeleteModalOpen(true)}
                 disabled={loading}
               >
-                <Feather name="trash-2" size={18} color={theme.ink} />
+                <Icon name="trash-2" size={16} color={theme.ink} />
               </TouchableOpacity>
             )}
 
-            {/* Botão de Expandir / Recolher */}
             <TouchableOpacity
               style={{ padding: 8, marginRight: 2 }}
               onPress={() => setIsExpanded((current) => !current)}
               disabled={loading}
             >
-              <Feather
+              <Icon
                 name={isExpanded ? "chevron-down" : "chevron-right"}
                 size={18}
                 color={theme.ink}
@@ -180,7 +176,6 @@ export function ActivityItem({
         </View>
       </SwipeToDelete>
 
-      {/* Renderização das Tasks filhas */}
       {isExpanded && activity.tasks && activity.tasks.length > 0 && (
         <View style={{ paddingLeft: 12, paddingBottom: 8 }}>
           {activity.tasks.map((task) => (
@@ -195,7 +190,6 @@ export function ActivityItem({
         </View>
       )}
 
-      {/* Modais */}
       <EditActivityModal
         visible={isEditModalOpen}
         activity={activity}

@@ -1,5 +1,5 @@
 import { Activity } from "@/components/types/activity.types";
-import { Category } from "@/components/types/category.type";
+import { Category, CreateCategoryDTO } from "@/components/types/category.type";
 import { TaskLog } from "@/components/types/task-log.type";
 import { Task } from "@/components/types/task.types";
 import { supabase } from "@/services/supabase";
@@ -91,7 +91,6 @@ function toActivity(activity: ActivityRow): Activity {
   };
 }
 
-/** Operações de categorias e atividades persistidas no Supabase. */
 export async function getCategories(): Promise<Category[]> {
   const { data, error } = await supabase
     .from("categories")
@@ -168,4 +167,26 @@ export async function updateCategory({
     .eq("id", id);
 
   if (error) throw error;
+}
+
+export async function createCategory({ name, icon }: CreateCategoryDTO) {
+  const { data, error } = await supabase
+    .from("categories")
+    .insert([
+      {
+        name,
+        icon,
+        level: 1,
+        total_xp: 0,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Erro ao criar categoria:", error);
+    throw error;
+  }
+
+  return data;
 }

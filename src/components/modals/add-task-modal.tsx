@@ -1,3 +1,4 @@
+import type { ComponentStyles } from "@/constants/component-styles";
 import { useState } from "react";
 import {
   Modal,
@@ -8,11 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import type { ComponentStyles } from "@/constants/component-styles";
-
-type TaskType = "BOOLEAN" | "QUANTITY" | "PROGRESS" | "EXERCISE" | "COMPOSITE";
-type GoalType = "HABIT" | "FINITE";
-type Periodicity = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+import { GoalType, Periodicity, TaskType } from "../types/task.types";
 
 type AddTaskModalProps = {
   visible: boolean;
@@ -28,6 +25,7 @@ type AddTaskModalProps = {
     goalType: GoalType;
     periodicity?: Periodicity;
     xpBase: number;
+    frequencyQuantity?: number;
     targetValue?: number;
     unitOfMeasurement?: string;
     currentProgress?: number;
@@ -50,6 +48,7 @@ export function AddTaskModal({
   const [goalType, setGoalType] = useState<GoalType>("HABIT");
   const [periodicity, setPeriodicity] = useState<Periodicity>("DAILY");
   const [xpBase, setXpBase] = useState("1");
+  const [frequencyQuantity, setFrequencyQuantity] = useState("1");
 
   const [targetValue, setTargetValue] = useState("");
   const [unitOfMeasurement, setUnitOfMeasurement] = useState("");
@@ -77,6 +76,8 @@ export function AddTaskModal({
       goalType,
       periodicity: goalType === "HABIT" ? periodicity : undefined,
       xpBase: Number(xpBase) || 1,
+      frequencyQuantity:
+        goalType === "HABIT" ? Number(frequencyQuantity) || 1 : undefined,
       targetValue:
         !isBoolean && !isExercise && targetValue
           ? Number(targetValue)
@@ -104,6 +105,7 @@ export function AddTaskModal({
     setGoalType("HABIT");
     setPeriodicity("DAILY");
     setXpBase("1");
+    setFrequencyQuantity("1");
     setTargetValue("");
     setUnitOfMeasurement("");
     setCurrentProgress("");
@@ -145,10 +147,10 @@ export function AddTaskModal({
             showsVerticalScrollIndicator={false}
             style={{ maxHeight: 520 }}
           >
-            {/* TÍTULO */}
             <Text style={[localStyles.label, { color: theme.midGray }]}>
               Título
             </Text>
+
             <TextInput
               style={[
                 localStyles.input,
@@ -164,10 +166,10 @@ export function AddTaskModal({
               onChangeText={setTitle}
             />
 
-            {/* DESCRIÇÃO */}
             <Text style={[localStyles.label, { color: theme.midGray }]}>
               Descrição (Opcional)
             </Text>
+
             <TextInput
               style={[
                 localStyles.input,
@@ -183,10 +185,10 @@ export function AddTaskModal({
               onChangeText={setDescription}
             />
 
-            {/* TIPO */}
             <Text style={[localStyles.label, { color: theme.midGray }]}>
               Tipo de Medição
             </Text>
+
             <View style={localStyles.optionsRow}>
               {[
                 { label: "Simples", value: "BOOLEAN" as TaskType },
@@ -222,10 +224,10 @@ export function AddTaskModal({
               })}
             </View>
 
-            {/* OBJETIVO */}
             <Text style={[localStyles.label, { color: theme.midGray }]}>
               Objetivo
             </Text>
+
             <View style={localStyles.optionsRow}>
               {[
                 { label: "Hábito", value: "HABIT" as GoalType },
@@ -258,7 +260,6 @@ export function AddTaskModal({
               })}
             </View>
 
-            {/* PERIODICIDADE */}
             {goalType === "HABIT" && (
               <>
                 <Text style={[localStyles.label, { color: theme.midGray }]}>
@@ -298,30 +299,62 @@ export function AddTaskModal({
                     );
                   })}
                 </View>
+
+                <View style={localStyles.rowInputs}>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        localStyles.labelCompact,
+                        { color: theme.midGray },
+                      ]}
+                    >
+                      Meta de execuções
+                    </Text>
+                    <TextInput
+                      style={[
+                        localStyles.inputCompact,
+                        {
+                          backgroundColor: theme.canvas,
+                          color: theme.ink,
+                          borderColor: theme.hairline,
+                        },
+                      ]}
+                      keyboardType="numeric"
+                      placeholder="1"
+                      placeholderTextColor={theme.midGray}
+                      value={frequencyQuantity}
+                      onChangeText={setFrequencyQuantity}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        localStyles.labelCompact,
+                        { color: theme.midGray },
+                      ]}
+                    >
+                      XP Base
+                    </Text>
+                    <TextInput
+                      style={[
+                        localStyles.inputCompact,
+                        {
+                          backgroundColor: theme.canvas,
+                          color: theme.ink,
+                          borderColor: theme.hairline,
+                        },
+                      ]}
+                      keyboardType="numeric"
+                      placeholder="Ex: 10"
+                      placeholderTextColor={theme.midGray}
+                      value={xpBase}
+                      onChangeText={setXpBase}
+                    />
+                  </View>
+                </View>
               </>
             )}
 
-            {/* XP BASE */}
-            <Text style={[localStyles.label, { color: theme.midGray }]}>
-              XP Base
-            </Text>
-            <TextInput
-              style={[
-                localStyles.input,
-                {
-                  backgroundColor: theme.canvas,
-                  color: theme.ink,
-                  borderColor: theme.hairline,
-                },
-              ]}
-              keyboardType="numeric"
-              placeholder="Ex: 10"
-              placeholderTextColor={theme.midGray}
-              value={xpBase}
-              onChangeText={setXpBase}
-            />
-
-            {/* QUANTIDADE */}
             {isQuantity && (
               <View style={localStyles.rowInputs}>
                 <View style={{ flex: 1 }}>
@@ -330,6 +363,7 @@ export function AddTaskModal({
                   >
                     Unidade
                   </Text>
+
                   <TextInput
                     style={[
                       localStyles.inputCompact,
@@ -348,7 +382,6 @@ export function AddTaskModal({
               </View>
             )}
 
-            {/* PROGRESSO */}
             {isProgress && (
               <View style={localStyles.rowInputs3}>
                 <View style={{ flex: 1 }}>
@@ -357,6 +390,7 @@ export function AddTaskModal({
                   >
                     Meta
                   </Text>
+
                   <TextInput
                     style={[
                       localStyles.inputCompact,
@@ -380,6 +414,7 @@ export function AddTaskModal({
                   >
                     Unidade
                   </Text>
+
                   <TextInput
                     style={[
                       localStyles.inputCompact,
@@ -402,6 +437,7 @@ export function AddTaskModal({
                   >
                     Progresso Inicial
                   </Text>
+
                   <TextInput
                     style={[
                       localStyles.inputCompact,
@@ -421,7 +457,6 @@ export function AddTaskModal({
               </View>
             )}
 
-            {/* EXERCÍCIO */}
             {isExercise && (
               <>
                 <Text style={[localStyles.sectionTitle, { color: theme.ink }]}>
@@ -438,6 +473,7 @@ export function AddTaskModal({
                     >
                       Peso (kg)
                     </Text>
+
                     <TextInput
                       style={[
                         localStyles.inputCompact,
@@ -464,6 +500,7 @@ export function AddTaskModal({
                     >
                       Repetições
                     </Text>
+
                     <TextInput
                       style={[
                         localStyles.inputCompact,
@@ -490,6 +527,7 @@ export function AddTaskModal({
                     >
                       Séries
                     </Text>
+
                     <TextInput
                       style={[
                         localStyles.inputCompact,
@@ -510,7 +548,6 @@ export function AddTaskModal({
               </>
             )}
 
-            {/* COMPOSTA */}
             {isComposite && (
               <View style={localStyles.rowInputs2}>
                 <View style={{ flex: 1 }}>
@@ -519,6 +556,7 @@ export function AddTaskModal({
                   >
                     Valor Base
                   </Text>
+
                   <TextInput
                     style={[
                       localStyles.inputCompact,
@@ -542,6 +580,7 @@ export function AddTaskModal({
                   >
                     Unidade
                   </Text>
+
                   <TextInput
                     style={[
                       localStyles.inputCompact,
@@ -560,7 +599,6 @@ export function AddTaskModal({
               </View>
             )}
 
-            {/* BOOLEAN */}
             {isBoolean && (
               <View
                 style={[

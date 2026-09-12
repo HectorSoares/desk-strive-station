@@ -11,26 +11,38 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CategoryCard } from "@/components/cards/category-card";
 import { AddActivityModal } from "@/components/modals/add-activity-modal";
+import { AddCategoryModal } from "@/components/modals/add-category-modal";
+import { Category } from "@/components/types/category.type";
+import { Icon, IconName } from "@/components/ui/icon";
 import { createComponentStyles } from "@/constants/component-styles";
 import { colors } from "@/constants/theme";
-import { getCategories } from "@/repositories/categories.repository";
 import { createActivity } from "@/repositories/activities.repository";
+import {
+  createCategory,
+  getCategories,
+} from "@/repositories/categories.repository";
 import {
   getUserProfile,
   type UserProfile,
 } from "@/repositories/user_profile.repository";
-import { Category } from "@/components/types/category.type";
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { getColorByPercentage } from "@/utils/color.utils";
 
 export default function HomeScreen() {
   const [themeName, setThemeName] = useState<"light" | "dark">("light");
   const [categories, setCategories] = useState<Category[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+
+  const [isAddActivityModalVisible, setIsAddActivityModalVisible] =
+    useState(false);
   const [activityName, setActivityName] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+
+  const [isAddCategoryModalVisible, setIsAddCategoryModalVisible] =
+    useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [selectedCategoryIcon, setSelectedCategoryIcon] = useState<IconName>(
+    "folder" as any,
+  );
 
   const isDark = themeName === "dark";
   const theme = colors[themeName];
@@ -47,10 +59,6 @@ export default function HomeScreen() {
       if (nextProfile) {
         setProfile(nextProfile);
       }
-
-      setSelectedCategoryId(
-        (currentId) => currentId || nextCategories[0]?.id || "",
-      );
     } catch (error) {
       console.error("Erro ao carregar dados da Home:", error);
     }
@@ -66,8 +74,8 @@ export default function HomeScreen() {
   const xpProgress = Math.round((xpIntoCurrentLevel / 1000) * 100);
   const streakDays = profile?.streak_days ?? 0;
 
-  function closeAddModal() {
-    setIsAddModalVisible(false);
+  function closeAddActivityModal() {
+    setIsAddActivityModalVisible(false);
     setActivityName("");
   }
 
@@ -81,9 +89,33 @@ export default function HomeScreen() {
         name: activityName.trim(),
       });
       await loadData();
-      closeAddModal();
+      closeAddActivityModal();
     } catch (error) {
       console.error("Erro ao salvar atividade:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function closeAddCategoryModal() {
+    setIsAddCategoryModalVisible(false);
+    setCategoryName("");
+    setSelectedCategoryIcon("folder" as any);
+  }
+
+  async function handleAddCategory() {
+    if (!categoryName.trim()) return;
+
+    setLoading(true);
+    try {
+      await createCategory({
+        name: categoryName.trim(),
+        icon: selectedCategoryIcon,
+      });
+      await loadData();
+      closeAddCategoryModal();
+    } catch (error) {
+      console.error("Erro ao salvar categoria:", error);
     } finally {
       setLoading(false);
     }
@@ -112,9 +144,9 @@ export default function HomeScreen() {
           testID="theme-toggle"
         >
           {isDark ? (
-            <Feather name="sun" size={18} color={theme.yellow} />
+            <Icon name="sun" size={18} color={theme.yellow} />
           ) : (
-            <Feather name="moon" size={18} color={theme.blue} />
+            <Icon name="moon" size={18} color={theme.blue} />
           )}
         </Pressable>
 
@@ -129,8 +161,8 @@ export default function HomeScreen() {
             </View>
 
             <Text style={styles.textMuted}>
-              <Ionicons name="flame-outline" size={16} color={theme.ink} />{" "}
-              {streakDays} dias seguidos ativos
+              <Icon name="flame" size={16} color={theme.ink} /> {streakDays}{" "}
+              dias seguidos ativos
             </Text>
             <View style={styles.progressBarBg}>
               <View
@@ -140,7 +172,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Renderiza os cards de categoria passando a função de recarregamento */}
         {categories.map((category) => (
           <CategoryCard
             key={category.id}
@@ -149,28 +180,49 @@ export default function HomeScreen() {
             theme={theme}
             loading={loading}
             onRefresh={loadData}
+            onAddActivity={(categoryId) => {
+              setSelectedCategoryId(categoryId);
+              setActivityName("");
+              setIsAddActivityModalVisible(true);
+            }}
           />
         ))}
       </ScrollView>
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => setIsAddModalVisible(true)}
+        onPress={() => {
+          setCategoryName("");
+          setSelectedCategoryIcon("folder" as any);
+          setIsAddCategoryModalVisible(true);
+        }}
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
 
       <AddActivityModal
-        visible={isAddModalVisible}
+        visible={isAddActivityModalVisible}
         categories={categories}
         selectedCategoryId={selectedCategoryId}
         activityName={activityName}
         theme={theme}
         loading={loading}
-        onClose={closeAddModal}
+        onClose={closeAddActivityModal}
         onActivityNameChange={setActivityName}
         onCategoryChange={setSelectedCategoryId}
         onSubmit={handleAddActivity}
+      />
+
+      <AddCategoryModal
+        visible={isAddCategoryModalVisible}
+        categoryName={categoryName}
+        selectedIcon={selectedCategoryIcon}
+        theme={theme}
+        loading={loading}
+        onClose={closeAddCategoryModal}
+        onCategoryNameChange={setCategoryName}
+        onIconChange={setSelectedCategoryIcon}
+        onSubmit={handleAddCategory}
       />
     </SafeAreaView>
   );

@@ -1,6 +1,5 @@
 import { modalStyles as styles } from "@/components/modals/modal-styles";
 import type { AppColorPalette } from "@/constants/theme";
-import Feather from "@expo/vector-icons/build/Feather";
 import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Category } from "../types/category.type";
 
@@ -19,14 +18,11 @@ type AddActivityModalProps = {
 
 export function AddActivityModal({
   visible,
-  categories,
-  selectedCategoryId,
   activityName,
   theme,
   loading,
   onClose,
   onActivityNameChange,
-  onCategoryChange,
   onSubmit,
 }: AddActivityModalProps) {
   return (
@@ -46,6 +42,7 @@ export function AddActivityModal({
           <Text style={[styles.title, { color: theme.ink }]}>
             Nova Atividade
           </Text>
+
           <Text style={[styles.label, { color: theme.midGray }]}>
             Nome da Atividade
           </Text>
@@ -62,49 +59,8 @@ export function AddActivityModal({
             placeholderTextColor={theme.midGray}
             value={activityName}
             onChangeText={onActivityNameChange}
+            autoFocus
           />
-
-          <Text style={[styles.label, { color: theme.midGray }]}>
-            Grupo / Categoria
-          </Text>
-          <View style={styles.optionsRow}>
-            {categories.map((category) => {
-              const selected = selectedCategoryId === category.id;
-              return (
-                <TouchableOpacity
-                  key={category.id}
-                  style={[
-                    styles.optionButton,
-                    { borderColor: theme.hairline },
-                    selected && { backgroundColor: theme.ink },
-                  ]}
-                  onPress={() => onCategoryChange(category.id)}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <Feather
-                      name={category.icon as keyof typeof Feather.glyphMap}
-                      size={18}
-                      color={selected ? theme.paper : theme.ink}
-                    />
-                    <Text
-                      style={[
-                        styles.optionText,
-                        { color: selected ? theme.paper : theme.ink },
-                      ]}
-                    >
-                      {category.name}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
 
           <View style={styles.actions}>
             <TouchableOpacity

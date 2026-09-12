@@ -7,3 +7,8 @@ export type Category = {
   level: number;
   activities: Activity[];
 };
+
+export type CreateCategoryDTO = {
+  name: string;
+  icon: string;
+};

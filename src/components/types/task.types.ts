@@ -43,6 +43,7 @@ export type Task = {
   periodicity?: Periodicity;
   status: Status;
   xp_base: number;
+  frequency_quantity: number;
   target_weight?: number;
   target_repetitions?: number;
   target_sets?: number;
@@ -58,13 +59,16 @@ export type CreateTaskDTO = {
   title: string;
   description?: string;
   type: TaskType;
-  xpGained: number;
-  periodicity?: number;
-  targetWeight?: number;
-  targetRepetitions?: number;
-  targetDurationMin?: number;
+  goalType: GoalType;
+  periodicity?: Periodicity;
+  frequencyQuantity?: number;
+  xpBase?: number;
   targetValue?: number;
   unitOfMeasurement?: string;
   currentProgress?: number;
+  targetWeight?: number;
+  targetRepetitions?: number;
+  targetSets?: number;
+  metadata?: Record<string, any>;
 };
 

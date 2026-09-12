@@ -1,22 +1,5 @@
-import { GoalType, Periodicity, TaskType } from "@/components/types/task.types";
+import { CreateTaskDTO } from "@/components/types/task.types";
 import { supabase } from "@/services/supabase";
-
-export type CreateTaskDTO = {
-  activityId: string;
-  title: string;
-  description?: string;
-  type: TaskType;
-  goalType: GoalType;
-  periodicity?: Periodicity;
-  xpBase?: number;
-  targetValue?: number;
-  unitOfMeasurement?: string;
-  currentProgress?: number;
-  targetWeight?: number;
-  targetRepetitions?: number;
-  targetSets?: number;
-  metadata?: Record<string, any>;
-};
 
 export async function createTask({
   activityId,
@@ -25,6 +8,7 @@ export async function createTask({
   type,
   goalType,
   periodicity,
+  frequencyQuantity = 1,
   xpBase = 1,
   targetValue,
   unitOfMeasurement,
@@ -44,6 +28,7 @@ export async function createTask({
         type,
         goal_type: goalType,
         periodicity: periodicity ?? null,
+        frequency_quantity: frequencyQuantity,
         xp_base: xpBase,
         target_value: targetValue ?? null,
         unit_of_measurement: unitOfMeasurement?.trim() || null,
