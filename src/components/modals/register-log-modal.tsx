@@ -1,6 +1,14 @@
 import type { AppColorPalette } from "@/constants/theme";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
-import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Task, TASK_TYPES } from "../types/task.types";
 import { modalStyles } from "./modal-styles";
 
@@ -19,8 +27,33 @@ type RegisterLogModalProps = {
     executedValue?: number;
     currentProgress?: number;
     progressMode?: ProgressMode;
+    executedAt: string;
   }) => void;
 };
+
+function getToday() {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  return date;
+}
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString("pt-BR");
+}
+
+function formatDateForDatabase(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseDatabaseDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setHours(12, 0, 0, 0);
+  return date;
+}
 
 export function RegisterLogModal({
   visible,
@@ -36,6 +69,8 @@ export function RegisterLogModal({
   const [executedValue, setExecutedValue] = useState("");
   const [currentProgress, setCurrentProgress] = useState("");
   const [progressMode, setProgressMode] = useState<ProgressMode>("INCREMENT");
+  const [executedAt, setExecutedAt] = useState<Date>(getToday());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -46,9 +81,9 @@ export function RegisterLogModal({
     setExecutedValue("");
     setCurrentProgress("");
     setProgressMode("INCREMENT");
+    setExecutedAt(getToday());
+    setShowDatePicker(false);
   }, [visible, task.id]);
-
-  if (!visible) return null;
 
   const isBoolean = task.type === TASK_TYPES.BOOLEAN;
   const isQuantity = task.type === TASK_TYPES.QUANTITY;
@@ -58,6 +93,21 @@ export function RegisterLogModal({
 
   const unit = task.unit_of_measurement ? ` (${task.unit_of_measurement})` : "";
 
+  function handleDateChange(event: any, selectedDate?: Date) {
+    setShowDatePicker(false);
+
+    if (selectedDate) {
+      selectedDate.setHours(12, 0, 0, 0);
+      setExecutedAt(selectedDate);
+    }
+  }
+
+  function handleWebDateChange(value: string) {
+    if (!value) return;
+
+    setExecutedAt(parseDatabaseDate(value));
+  }
+
   function handleSubmit() {
     onSubmit({
       executedWeight: weight ? Number(weight) : undefined,
@@ -66,6 +116,7 @@ export function RegisterLogModal({
       executedValue: executedValue ? Number(executedValue) : undefined,
       currentProgress: currentProgress ? Number(currentProgress) : undefined,
       progressMode: isProgress ? progressMode : undefined,
+      executedAt: formatDateForDatabase(executedAt),
     });
   }
 
@@ -94,7 +145,60 @@ export function RegisterLogModal({
             {task.title}
           </Text>
 
-          {isBoolean ? (
+          <Text style={[modalStyles.label, { color: theme.midGray }]}>
+            Data da execução
+          </Text>
+
+          {Platform.OS === "web" ? (
+            <input
+              type="date"
+              value={formatDateForDatabase(executedAt)}
+              max={formatDateForDatabase(getToday())}
+              onChange={(event) => handleWebDateChange(event.target.value)}
+              disabled={loading}
+              style={{
+                width: "15%",
+                height: 44,
+                padding: "0 12px",
+                borderRadius: 8,
+                border: `1px solid ${theme.hairline}`,
+                backgroundColor: theme.canvas,
+                color: theme.ink,
+                fontSize: 15,
+                boxSizing: "border-box",
+              }}
+            />
+          ) : (
+            <>
+              <TouchableOpacity
+                style={[
+                  modalStyles.input,
+                  {
+                    backgroundColor: theme.canvas,
+                    borderColor: theme.hairline,
+                    justifyContent: "center",
+                  },
+                ]}
+                onPress={() => setShowDatePicker(true)}
+                disabled={loading}
+              >
+                <Text style={{ color: theme.ink }}>
+                  📅 {formatDate(executedAt)}
+                </Text>
+              </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={executedAt}
+                  mode="date"
+                  maximumDate={getToday()}
+                  onChange={handleDateChange}
+                />
+              )}
+            </>
+          )}
+
+          {isBoolean && (
             <View style={modalStyles.infoBox}>
               <Text style={[modalStyles.infoTitle, { color: theme.ink }]}>
                 Concluir tarefa
@@ -104,9 +208,9 @@ export function RegisterLogModal({
                 Confirme a execução desta tarefa para receber {task.xp_base} XP.
               </Text>
             </View>
-          ) : null}
+          )}
 
-          {isQuantity ? (
+          {isQuantity && (
             <View>
               <Text style={[modalStyles.label, { color: theme.midGray }]}>
                 Quantidade{unit}
@@ -128,16 +232,16 @@ export function RegisterLogModal({
                 onChangeText={setExecutedValue}
               />
 
-              {task.target_value !== undefined ? (
+              {task.target_value !== undefined && (
                 <Text style={[modalStyles.hint, { color: theme.midGray }]}>
                   Meta: {task.target_value}
                   {unit}
                 </Text>
-              ) : null}
+              )}
             </View>
-          ) : null}
+          )}
 
-          {isProgress ? (
+          {isProgress && (
             <View>
               <Text style={[modalStyles.label, { color: theme.midGray }]}>
                 Registrar progresso
@@ -233,16 +337,16 @@ export function RegisterLogModal({
                 }
               />
 
-              {task.target_value !== undefined ? (
+              {task.target_value !== undefined && (
                 <Text style={[modalStyles.hint, { color: theme.midGray }]}>
                   Progresso: {task.current_progress ?? 0} / {task.target_value}
                   {unit}
                 </Text>
-              ) : null}
+              )}
             </View>
-          ) : null}
+          )}
 
-          {isExercise ? (
+          {isExercise && (
             <View>
               <View style={modalStyles.row}>
                 <View style={{ flex: 1 }}>
@@ -329,9 +433,9 @@ export function RegisterLogModal({
                 </Text>
               </View>
             </View>
-          ) : null}
+          )}
 
-          {isComposite ? (
+          {isComposite && (
             <View>
               <Text style={[modalStyles.label, { color: theme.midGray }]}>
                 Valor executado{unit}
@@ -353,14 +457,14 @@ export function RegisterLogModal({
                 onChangeText={setExecutedValue}
               />
 
-              {task.target_value !== undefined ? (
+              {task.target_value !== undefined && (
                 <Text style={[modalStyles.hint, { color: theme.midGray }]}>
                   Meta: {task.target_value}
                   {unit}
                 </Text>
-              ) : null}
+              )}
             </View>
-          ) : null}
+          )}
 
           <View style={modalStyles.actions}>
             <TouchableOpacity
@@ -371,7 +475,12 @@ export function RegisterLogModal({
               onPress={onClose}
               disabled={loading}
             >
-              <Text style={{ color: theme.ink, fontWeight: "500" }}>
+              <Text
+                style={{
+                  color: theme.ink,
+                  fontWeight: "500",
+                }}
+              >
                 Cancelar
               </Text>
             </TouchableOpacity>
@@ -387,7 +496,12 @@ export function RegisterLogModal({
               onPress={handleSubmit}
               disabled={loading}
             >
-              <Text style={{ color: theme.paper, fontWeight: "500" }}>
+              <Text
+                style={{
+                  color: theme.paper,
+                  fontWeight: "500",
+                }}
+              >
                 {loading ? "Salvando..." : isBoolean ? "Concluir" : "Registrar"}
               </Text>
             </TouchableOpacity>

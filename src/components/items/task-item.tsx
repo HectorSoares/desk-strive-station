@@ -1,4 +1,5 @@
 import { RegisterLogModal } from "@/components/modals/register-log-modal";
+import { ConfirmationModal } from "@/components/modals/confirmation-modal";
 import { SwipeToDelete } from "@/components/ui/swipe-to-delete";
 import type { ComponentStyles } from "@/constants/component-styles";
 import { registerTaskLog } from "@/repositories/task-logs.repository";
@@ -60,6 +61,7 @@ function getPeriodicityLabel(periodicity?: Task["periodicity"]) {
 
 export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const taskDetails = TASK_TYPE_DETAILS[task.type];
@@ -130,8 +132,17 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
   }
 
   async function handleDeleteTask() {
-    await deleteTask(task.id);
-    onRefresh?.();
+    setLoading(true);
+
+    try {
+      await deleteTask(task.id);
+      setIsDeleteModalOpen(false);
+      onRefresh?.();
+    } catch (error) {
+      console.error("Erro ao excluir tarefa:", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const periodicityLabel = getPeriodicityLabel(task.periodicity);
@@ -227,7 +238,7 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
                         borderColor: theme.hairline,
                       },
                     ]}
-                    onPress={() => {}}
+                    onPress={() => setIsDeleteModalOpen(true)}
                     disabled={loading}
                   >
                     <Icon name="trash-2" size={14} color={theme.ink} />
@@ -372,6 +383,18 @@ export function TaskItem({ task, styles, theme, onRefresh }: TaskItemProps) {
         loading={loading}
         onClose={() => setIsLogModalOpen(false)}
         onSubmit={handleRegisterLog}
+      />
+
+      <ConfirmationModal
+        visible={isDeleteModalOpen}
+        title="Excluir tarefa?"
+        message={`A tarefa "${task.title}" será excluída permanentemente, junto com seu histórico de execuções.`}
+        theme={theme}
+        loading={loading}
+        icon="trash-2"
+        confirmText="Excluir"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteTask}
       />
     </>
   );

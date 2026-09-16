@@ -9,6 +9,7 @@ export type CreateTaskLogDTO = {
   executedValue?: number;
   currentProgress?: number;
   metadata?: Record<string, any>;
+  executedAt?: string;
 };
 
 export async function createTaskLog({
@@ -20,6 +21,7 @@ export async function createTaskLog({
   executedValue,
   currentProgress,
   metadata = {},
+  executedAt,
 }: CreateTaskLogDTO) {
   const { data, error } = await supabase
     .from("task_logs")
@@ -32,6 +34,7 @@ export async function createTaskLog({
         executed_sets: executedSets ?? null,
         executed_value: executedValue ?? null,
         current_progress: currentProgress ?? null,
+        executed_at: executedAt ?? new Date().toISOString(),
         metadata,
       },
     ])
@@ -53,6 +56,7 @@ export type RegisterTaskLogDTO = {
   executedSets?: number;
   executedValue?: number;
   currentProgress?: number;
+  executedAt?: string;
   progressMode?: "INCREMENT" | "ABSOLUTE";
 };
 
@@ -64,6 +68,7 @@ export async function registerTaskLog({
   executedValue,
   currentProgress,
   progressMode,
+  executedAt,
 }: RegisterTaskLogDTO) {
   const { data, error } = await supabase.rpc("register_task_log", {
     p_task_id: taskId,
@@ -73,6 +78,7 @@ export async function registerTaskLog({
     p_executed_value: executedValue ?? null,
     p_current_progress: currentProgress ?? null,
     p_progress_mode: progressMode ?? null,
+    p_executed_at: executedAt ?? new Date().toISOString(),
   });
 
   if (error) {

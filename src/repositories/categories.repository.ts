@@ -22,6 +22,7 @@ type TaskRow = {
   current_progress: number | null;
   metadata: Record<string, any> | null;
   task_logs: TaskLog[] | null;
+  frequency_quantity: number | null;
 };
 
 type ActivityRow = {
@@ -71,6 +72,7 @@ function toActivity(activity: ActivityRow): Activity {
     current_progress: t.current_progress ?? undefined,
     metadata: t.metadata ?? {},
     task_logs: t.task_logs ?? [],
+    frequency_quantity: t.frequency_quantity ?? 1
   }));
 
   const primaryType = rawTasks[0]?.type ?? "BOOLEAN";

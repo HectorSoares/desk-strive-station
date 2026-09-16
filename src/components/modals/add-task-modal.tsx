@@ -308,7 +308,7 @@ export function AddTaskModal({
                         { color: theme.midGray },
                       ]}
                     >
-                      Meta de execuções
+                      Meta de execuções no periodo
                     </Text>
                     <TextInput
                       style={[
