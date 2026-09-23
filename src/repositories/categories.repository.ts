@@ -23,6 +23,7 @@ type TaskRow = {
   metadata: Record<string, any> | null;
   task_logs: TaskLog[] | null;
   frequency_quantity: number | null;
+  created_at: string;
 };
 
 type ActivityRow = {
@@ -72,14 +73,14 @@ function toActivity(activity: ActivityRow): Activity {
     current_progress: t.current_progress ?? undefined,
     metadata: t.metadata ?? {},
     task_logs: t.task_logs ?? [],
-    frequency_quantity: t.frequency_quantity ?? 1
+    frequency_quantity: t.frequency_quantity ?? 1,
+    created_at: t.created_at
   }));
 
   const primaryType = rawTasks[0]?.type ?? "BOOLEAN";
 
   const descriptions: Record<Task["type"], string> = {
     BOOLEAN: "Hábito / Consistência",
-    QUANTITY: "Quantidade",
     PROGRESS: "Métrica Progressiva",
     EXERCISE: "Exercício",
     COMPOSITE: "Meta Composta",
@@ -122,6 +123,7 @@ export async function getCategories(): Promise<Category[]> {
           unit_of_measurement,
           current_progress,
           metadata,
+          created_at,
           task_logs (
             id,
             xp_gained,

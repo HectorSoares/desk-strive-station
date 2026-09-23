@@ -86,7 +86,6 @@ export function RegisterLogModal({
   }, [visible, task.id]);
 
   const isBoolean = task.type === TASK_TYPES.BOOLEAN;
-  const isQuantity = task.type === TASK_TYPES.QUANTITY;
   const isProgress = task.type === TASK_TYPES.PROGRESS;
   const isExercise = task.type === TASK_TYPES.EXERCISE;
   const isComposite = task.type === TASK_TYPES.COMPOSITE;
@@ -207,37 +206,6 @@ export function RegisterLogModal({
               <Text style={[modalStyles.infoText, { color: theme.midGray }]}>
                 Confirme a execução desta tarefa para receber {task.xp_base} XP.
               </Text>
-            </View>
-          )}
-
-          {isQuantity && (
-            <View>
-              <Text style={[modalStyles.label, { color: theme.midGray }]}>
-                Quantidade{unit}
-              </Text>
-
-              <TextInput
-                style={[
-                  modalStyles.input,
-                  {
-                    backgroundColor: theme.canvas,
-                    color: theme.ink,
-                    borderColor: theme.hairline,
-                  },
-                ]}
-                keyboardType="numeric"
-                placeholder={`Ex: ${task.target_value ?? 10}`}
-                placeholderTextColor={theme.midGray}
-                value={executedValue}
-                onChangeText={setExecutedValue}
-              />
-
-              {task.target_value !== undefined && (
-                <Text style={[modalStyles.hint, { color: theme.midGray }]}>
-                  Meta: {task.target_value}
-                  {unit}
-                </Text>
-              )}
             </View>
           )}
 

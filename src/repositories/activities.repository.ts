@@ -19,6 +19,8 @@ type TaskRow = {
   unit_of_measurement: string | null;
   current_progress: number | null;
   metadata: Record<string, any> | null;
+  frequency_quantity: number | null;
+  created_at: string;
   task_logs: TaskLogRow[] | null;
 };
 
@@ -69,7 +71,9 @@ function toTask(task: TaskRow): Task {
     target_value: task.target_value ?? undefined,
     unit_of_measurement: task.unit_of_measurement ?? undefined,
     current_progress: task.current_progress ?? undefined,
+    frequency_quantity: task.frequency_quantity || 0,
     metadata: task.metadata ?? {},
+    created_at: task.created_at,
     task_logs: (task.task_logs ?? []).map((log) => ({
       id: log.id,
       task_id: log.task_id,
@@ -92,7 +96,6 @@ export function toActivity(activity: ActivityRow): Activity {
 
   const descriptions: Record<Task["type"], string> = {
     BOOLEAN: "Hábito / Consistência",
-    QUANTITY: "Quantidade",
     PROGRESS: "Métrica Progressiva",
     EXERCISE: "Exercício",
     COMPOSITE: "Meta Composta",

@@ -12,7 +12,13 @@ import { createTask } from "@/repositories/tasks.repository";
 import { useState } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Activity } from "../types/activity.types";
-import { GoalType, Periodicity, TaskType } from "../types/task.types";
+import {
+  GoalType,
+  Periodicity,
+  STATUS,
+  Task,
+  TaskType,
+} from "../types/task.types";
 import { Icon } from "../ui/icon";
 
 type ActivityItemProps = {
@@ -35,6 +41,11 @@ export function ActivityItem({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const canShowTask = (task: Task) => {
+    return task.status == STATUS.PENDING;
+  };
 
   async function handleSaveTask(taskData: {
     title: string;
@@ -178,15 +189,18 @@ export function ActivityItem({
 
       {isExpanded && activity.tasks && activity.tasks.length > 0 && (
         <View style={{ paddingLeft: 12, paddingBottom: 8 }}>
-          {activity.tasks.map((task) => (
-            <TaskItem
-              theme={theme}
-              key={task.id}
-              task={task}
-              styles={styles}
-              onRefresh={onRefresh}
-            />
-          ))}
+          {activity.tasks.map(
+            (task) =>
+              canShowTask(task) && (
+                <TaskItem
+                  theme={theme}
+                  key={task.id}
+                  task={task}
+                  styles={styles}
+                  onRefresh={onRefresh}
+                />
+              ),
+          )}
         </View>
       )}
 

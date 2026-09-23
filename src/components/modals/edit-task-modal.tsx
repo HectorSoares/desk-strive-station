@@ -1,5 +1,5 @@
 import type { ComponentStyles } from "@/constants/component-styles";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   ScrollView,
@@ -9,11 +9,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { GoalType, Periodicity, TaskType } from "../types/task.types";
+import {
+  GOAL_TYPES,
+  PERIODICITIES,
+  TASK_TYPES,
+  GoalType,
+  Periodicity,
+  Task,
+  TaskType,
+} from "../types/task.types";
 
-type AddTaskModalProps = {
+type EditTaskModalProps = {
   visible: boolean;
-  activityId: string;
+  task: Task;
   theme: any;
   styles: ComponentStyles;
   loading?: boolean;
@@ -28,42 +36,59 @@ type AddTaskModalProps = {
     frequencyQuantity?: number;
     targetValue?: number;
     unitOfMeasurement?: string;
-    currentProgress?: number;
     targetWeight?: number;
     targetRepetitions?: number;
     targetSets?: number;
   }) => void;
 };
 
-export function AddTaskModal({
+export function EditTaskModal({
   visible,
+  task,
   theme,
   loading,
   onClose,
   onSave,
-}: AddTaskModalProps) {
+}: EditTaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState<TaskType>("BOOLEAN");
-  const [goalType, setGoalType] = useState<GoalType>("HABIT");
-  const [periodicity, setPeriodicity] = useState<Periodicity>("DAILY");
+  const [type, setType] = useState<TaskType>(TASK_TYPES.BOOLEAN);
+  const [goalType, setGoalType] = useState<GoalType>(GOAL_TYPES.HABIT);
+  const [periodicity, setPeriodicity] = useState<Periodicity>(
+    PERIODICITIES.DAILY,
+  );
   const [xpBase, setXpBase] = useState("1");
   const [frequencyQuantity, setFrequencyQuantity] = useState("1");
-
   const [targetValue, setTargetValue] = useState("");
   const [unitOfMeasurement, setUnitOfMeasurement] = useState("");
-  const [currentProgress, setCurrentProgress] = useState("");
-
   const [targetWeight, setTargetWeight] = useState("");
   const [targetRepetitions, setTargetRepetitions] = useState("");
   const [targetSets, setTargetSets] = useState("");
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (!visible) return;
 
-  const isBoolean = type === "BOOLEAN";
-  const isProgress = type === "PROGRESS";
-  const isExercise = type === "EXERCISE";
-  const isComposite = type === "COMPOSITE";
+    setTitle(task.title ?? "");
+    setDescription(task.description ?? "");
+    setType(task.type);
+    setGoalType(task.goal_type);
+    setPeriodicity(task.periodicity ?? PERIODICITIES.DAILY);
+    setXpBase(String(task.xp_base ?? 1));
+    setFrequencyQuantity(String(task.frequency_quantity ?? 1));
+    setTargetValue(task.target_value != null ? String(task.target_value) : "");
+    setUnitOfMeasurement(task.unit_of_measurement ?? "");
+    setTargetWeight(
+      task.target_weight != null ? String(task.target_weight) : "",
+    );
+    setTargetRepetitions(
+      task.target_repetitions != null ? String(task.target_repetitions) : "",
+    );
+    setTargetSets(task.target_sets != null ? String(task.target_sets) : "");
+  }, [visible, task.id]);
+
+  const isBoolean = type === TASK_TYPES.BOOLEAN;
+  const isProgress = type === TASK_TYPES.PROGRESS;
+  const isExercise = type === TASK_TYPES.EXERCISE;
 
   const handleSave = () => {
     if (!title.trim()) return;
@@ -73,10 +98,12 @@ export function AddTaskModal({
       description: description.trim(),
       type,
       goalType,
-      periodicity: goalType === "HABIT" ? periodicity : undefined,
+      periodicity: goalType === GOAL_TYPES.HABIT ? periodicity : undefined,
       xpBase: Number(xpBase) || 1,
       frequencyQuantity:
-        goalType === "HABIT" ? Number(frequencyQuantity) || 1 : undefined,
+        goalType === GOAL_TYPES.HABIT
+          ? Number(frequencyQuantity) || 1
+          : undefined,
       targetValue:
         !isBoolean && !isExercise && targetValue
           ? Number(targetValue)
@@ -85,39 +112,19 @@ export function AddTaskModal({
         !isBoolean && !isExercise && unitOfMeasurement.trim()
           ? unitOfMeasurement.trim()
           : undefined,
-      currentProgress:
-        isProgress && currentProgress ? Number(currentProgress) : undefined,
       targetWeight:
         isExercise && targetWeight ? Number(targetWeight) : undefined,
       targetRepetitions:
         isExercise && targetRepetitions ? Number(targetRepetitions) : undefined,
       targetSets: isExercise && targetSets ? Number(targetSets) : undefined,
     });
-
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setTitle("");
-    setDescription("");
-    setType("BOOLEAN");
-    setGoalType("HABIT");
-    setPeriodicity("DAILY");
-    setXpBase("1");
-    setFrequencyQuantity("1");
-    setTargetValue("");
-    setUnitOfMeasurement("");
-    setCurrentProgress("");
-    setTargetWeight("");
-    setTargetRepetitions("");
-    setTargetSets("");
   };
 
   const selectType = (value: TaskType) => {
     setType(value);
 
-    if (value === "BOOLEAN") {
-      setGoalType("HABIT");
+    if (value === TASK_TYPES.BOOLEAN) {
+      setGoalType(GOAL_TYPES.HABIT);
     }
   };
 
@@ -139,7 +146,7 @@ export function AddTaskModal({
           ]}
         >
           <Text style={[localStyles.modalTitle, { color: theme.ink }]}>
-            Nova Tarefa / Meta
+            Editar Tarefa / Meta
           </Text>
 
           <ScrollView
@@ -163,6 +170,7 @@ export function AddTaskModal({
               placeholderTextColor={theme.midGray}
               value={title}
               onChangeText={setTitle}
+              editable={!loading}
             />
 
             <Text style={[localStyles.label, { color: theme.midGray }]}>
@@ -182,6 +190,7 @@ export function AddTaskModal({
               placeholderTextColor={theme.midGray}
               value={description}
               onChangeText={setDescription}
+              editable={!loading}
             />
 
             <Text style={[localStyles.label, { color: theme.midGray }]}>
@@ -190,9 +199,9 @@ export function AddTaskModal({
 
             <View style={localStyles.optionsRow}>
               {[
-                { label: "Simples", value: "BOOLEAN" as TaskType },
-                { label: "Progresso", value: "PROGRESS" as TaskType },
-                { label: "Exercício", value: "EXERCISE" as TaskType },
+                { label: "Simples", value: TASK_TYPES.BOOLEAN },
+                { label: "Progresso", value: TASK_TYPES.PROGRESS },
+                { label: "Exercício", value: TASK_TYPES.EXERCISE },
               ].map((item) => {
                 const selected = type === item.value;
 
@@ -205,6 +214,7 @@ export function AddTaskModal({
                       selected && { backgroundColor: theme.ink },
                     ]}
                     onPress={() => selectType(item.value)}
+                    disabled={loading}
                   >
                     <Text
                       style={[
@@ -227,8 +237,8 @@ export function AddTaskModal({
 
             <View style={localStyles.optionsRow}>
               {[
-                { label: "Hábito", value: "HABIT" as GoalType },
-                { label: "Finita", value: "FINITE" as GoalType },
+                { label: "Hábito", value: GOAL_TYPES.HABIT },
+                { label: "Finita", value: GOAL_TYPES.FINITE },
               ].map((item) => {
                 const selected = goalType === item.value;
 
@@ -241,6 +251,7 @@ export function AddTaskModal({
                       selected && { backgroundColor: theme.ink },
                     ]}
                     onPress={() => setGoalType(item.value)}
+                    disabled={loading || isBoolean}
                   >
                     <Text
                       style={[
@@ -257,7 +268,7 @@ export function AddTaskModal({
               })}
             </View>
 
-            {goalType === "HABIT" && (
+            {goalType === GOAL_TYPES.HABIT && (
               <>
                 <Text style={[localStyles.label, { color: theme.midGray }]}>
                   Periodicidade
@@ -265,10 +276,10 @@ export function AddTaskModal({
 
                 <View style={localStyles.optionsRow}>
                   {[
-                    { label: "Diária", value: "DAILY" as Periodicity },
-                    { label: "Semanal", value: "WEEKLY" as Periodicity },
-                    { label: "Mensal", value: "MONTHLY" as Periodicity },
-                    { label: "Anual", value: "YEARLY" as Periodicity },
+                    { label: "Diária", value: PERIODICITIES.DAILY },
+                    { label: "Semanal", value: PERIODICITIES.WEEKLY },
+                    { label: "Mensal", value: PERIODICITIES.MONTHLY },
+                    { label: "Anual", value: PERIODICITIES.YEARLY },
                   ].map((item) => {
                     const selected = periodicity === item.value;
 
@@ -281,6 +292,7 @@ export function AddTaskModal({
                           selected && { backgroundColor: theme.ink },
                         ]}
                         onPress={() => setPeriodicity(item.value)}
+                        disabled={loading}
                       >
                         <Text
                           style={[
@@ -296,57 +308,65 @@ export function AddTaskModal({
                     );
                   })}
                 </View>
+
+                <View style={localStyles.rowInputs}>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        localStyles.labelCompact,
+                        { color: theme.midGray },
+                      ]}
+                    >
+                      Meta de execuções no período
+                    </Text>
+
+                    <TextInput
+                      style={[
+                        localStyles.inputCompact,
+                        {
+                          backgroundColor: theme.canvas,
+                          color: theme.ink,
+                          borderColor: theme.hairline,
+                        },
+                      ]}
+                      keyboardType="numeric"
+                      value={frequencyQuantity}
+                      onChangeText={setFrequencyQuantity}
+                      editable={!loading}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        localStyles.labelCompact,
+                        { color: theme.midGray },
+                      ]}
+                    >
+                      XP Base
+                    </Text>
+
+                    <TextInput
+                      style={[
+                        localStyles.inputCompact,
+                        {
+                          backgroundColor: theme.canvas,
+                          color: theme.ink,
+                          borderColor: theme.hairline,
+                        },
+                      ]}
+                      keyboardType="numeric"
+                      value={xpBase}
+                      onChangeText={setXpBase}
+                      editable={!loading}
+                    />
+                  </View>
+                </View>
               </>
             )}
-            <View style={localStyles.rowInputs}>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={[localStyles.labelCompact, { color: theme.midGray }]}
-                >
-                  Meta de execuções no periodo
-                </Text>
-                <TextInput
-                  style={[
-                    localStyles.inputCompact,
-                    {
-                      backgroundColor: theme.canvas,
-                      color: theme.ink,
-                      borderColor: theme.hairline,
-                    },
-                  ]}
-                  keyboardType="numeric"
-                  placeholder="1"
-                  placeholderTextColor={theme.midGray}
-                  value={frequencyQuantity}
-                  onChangeText={setFrequencyQuantity}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={[localStyles.labelCompact, { color: theme.midGray }]}
-                >
-                  XP Base
-                </Text>
-                <TextInput
-                  style={[
-                    localStyles.inputCompact,
-                    {
-                      backgroundColor: theme.canvas,
-                      color: theme.ink,
-                      borderColor: theme.hairline,
-                    },
-                  ]}
-                  keyboardType="numeric"
-                  placeholder="Ex: 10"
-                  placeholderTextColor={theme.midGray}
-                  value={xpBase}
-                  onChangeText={setXpBase}
-                />
-              </View>
-            </View>
 
             {isProgress && (
-              <View style={localStyles.rowInputs3}>
+              <View style={localStyles.rowInputs}>
                 <View style={{ flex: 1 }}>
                   <Text
                     style={[localStyles.labelCompact, { color: theme.midGray }]}
@@ -364,10 +384,9 @@ export function AddTaskModal({
                       },
                     ]}
                     keyboardType="numeric"
-                    placeholder="300"
-                    placeholderTextColor={theme.midGray}
                     value={targetValue}
                     onChangeText={setTargetValue}
+                    editable={!loading}
                   />
                 </View>
 
@@ -387,34 +406,9 @@ export function AddTaskModal({
                         borderColor: theme.hairline,
                       },
                     ]}
-                    placeholder="páginas"
-                    placeholderTextColor={theme.midGray}
                     value={unitOfMeasurement}
                     onChangeText={setUnitOfMeasurement}
-                  />
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={[localStyles.labelCompact, { color: theme.midGray }]}
-                  >
-                    Progresso Inicial
-                  </Text>
-
-                  <TextInput
-                    style={[
-                      localStyles.inputCompact,
-                      {
-                        backgroundColor: theme.canvas,
-                        color: theme.ink,
-                        borderColor: theme.hairline,
-                      },
-                    ]}
-                    keyboardType="numeric"
-                    placeholder="0"
-                    placeholderTextColor={theme.midGray}
-                    value={currentProgress}
-                    onChangeText={setCurrentProgress}
+                    editable={!loading}
                   />
                 </View>
               </View>
@@ -447,10 +441,9 @@ export function AddTaskModal({
                         },
                       ]}
                       keyboardType="numeric"
-                      placeholder="20"
-                      placeholderTextColor={theme.midGray}
                       value={targetWeight}
                       onChangeText={setTargetWeight}
+                      editable={!loading}
                     />
                   </View>
 
@@ -474,10 +467,9 @@ export function AddTaskModal({
                         },
                       ]}
                       keyboardType="numeric"
-                      placeholder="12"
-                      placeholderTextColor={theme.midGray}
                       value={targetRepetitions}
                       onChangeText={setTargetRepetitions}
+                      editable={!loading}
                     />
                   </View>
 
@@ -501,65 +493,13 @@ export function AddTaskModal({
                         },
                       ]}
                       keyboardType="numeric"
-                      placeholder="3"
-                      placeholderTextColor={theme.midGray}
                       value={targetSets}
                       onChangeText={setTargetSets}
+                      editable={!loading}
                     />
                   </View>
                 </View>
               </>
-            )}
-
-            {isComposite && (
-              <View style={localStyles.rowInputs2}>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={[localStyles.labelCompact, { color: theme.midGray }]}
-                  >
-                    Valor Base
-                  </Text>
-
-                  <TextInput
-                    style={[
-                      localStyles.inputCompact,
-                      {
-                        backgroundColor: theme.canvas,
-                        color: theme.ink,
-                        borderColor: theme.hairline,
-                      },
-                    ]}
-                    keyboardType="numeric"
-                    placeholder="Valor"
-                    placeholderTextColor={theme.midGray}
-                    value={targetValue}
-                    onChangeText={setTargetValue}
-                  />
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={[localStyles.labelCompact, { color: theme.midGray }]}
-                  >
-                    Unidade
-                  </Text>
-
-                  <TextInput
-                    style={[
-                      localStyles.inputCompact,
-                      {
-                        backgroundColor: theme.canvas,
-                        color: theme.ink,
-                        borderColor: theme.hairline,
-                      },
-                    ]}
-                    placeholder="unidade"
-                    placeholderTextColor={theme.midGray}
-                    value={unitOfMeasurement}
-                    onChangeText={setUnitOfMeasurement}
-                  />
-                </View>
-              </View>
             )}
 
             {isBoolean && (
@@ -603,7 +543,7 @@ export function AddTaskModal({
               disabled={loading}
             >
               <Text style={{ color: theme.paper, fontWeight: "500" }}>
-                {loading ? "Salvando..." : "Adicionar"}
+                {loading ? "Salvando..." : "Salvar"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -668,10 +608,6 @@ const localStyles = StyleSheet.create({
     textAlign: "center",
   },
   rowInputs: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  rowInputs2: {
     flexDirection: "row",
     gap: 6,
   },

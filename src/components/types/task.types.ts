@@ -2,7 +2,6 @@ import { TaskLog } from "./task-log.type";
 
 export const TASK_TYPES = {
   BOOLEAN: "BOOLEAN",
-  QUANTITY: "QUANTITY",
   PROGRESS: "PROGRESS",
   EXERCISE: "EXERCISE",
   COMPOSITE: "COMPOSITE",
@@ -29,9 +28,12 @@ export type Periodicity = typeof PERIODICITIES[keyof typeof PERIODICITIES];
 export const STATUS = {
   PENDING: "PENDING",
   COMPLETED: "COMPLETED",
+  ARCHIVED: "ARCHIVED"
 } as const;
 
 export type Status = typeof STATUS[keyof typeof STATUS];
+
+
 
 export type Task = {
   id: string;
@@ -51,8 +53,10 @@ export type Task = {
   unit_of_measurement?: string;
   current_progress?: number;
   metadata?: Record<string, any>;
+  created_at: string;
   task_logs?: TaskLog[];
 };
+
 
 export type CreateTaskDTO = {
   activityId: string;
